@@ -29,9 +29,10 @@ interface TransactionsPageClientProps {
   transactions: TransactionData[];
   accounts: TxnAccountData[];
   categories: TxnCategoryData[];
+  exchangeRates?: Record<string, number>;
 }
 
-export function TransactionsPageClient({ transactions, accounts, categories }: TransactionsPageClientProps) {
+export function TransactionsPageClient({ transactions, accounts, categories, exchangeRates }: TransactionsPageClientProps) {
   const [editingTxn, setEditingTxn] = React.useState<TransactionData | null>(null);
   const [viewingTxn, setViewingTxn] = React.useState<TransactionData | null>(null);
   const [deletingTxn, setDeletingTxn] = React.useState<TransactionData | null>(null);
@@ -48,7 +49,7 @@ export function TransactionsPageClient({ transactions, accounts, categories }: T
   const filteredTransactions = React.useMemo(() => {
     return transactions.filter((txn) => {
       if (filterType !== "all" && txn.type !== filterType) return false;
-      if (filterAccount !== "all" && txn.account_id !== filterAccount) return false;
+      if (filterAccount !== "all" && txn.account_id !== filterAccount && txn.to_account_id !== filterAccount) return false;
       if (filterCategory !== "all" && txn.category_id !== filterCategory) return false;
       return true;
     });
@@ -112,6 +113,7 @@ export function TransactionsPageClient({ transactions, accounts, categories }: T
         <TransactionDialog
           accounts={accounts}
           categories={categories}
+          exchangeRates={exchangeRates}
           open={isCreateOpen}
           onOpenChange={setIsCreateOpen}
           trigger={<Button><Plus className="mr-2 h-4 w-4" /> Add Transaction</Button>}
@@ -130,6 +132,7 @@ export function TransactionsPageClient({ transactions, accounts, categories }: T
             <SelectItem value="all" label="All Types">All Types</SelectItem>
             <SelectItem value="expense" label="Expense">Expense</SelectItem>
             <SelectItem value="income" label="Income">Income</SelectItem>
+            <SelectItem value="transfer" label="Transfer">Transfer</SelectItem>
           </SelectContent>
         </Select>
 
@@ -220,6 +223,7 @@ export function TransactionsPageClient({ transactions, accounts, categories }: T
         transaction={editingTxn || undefined}
         accounts={accounts}
         categories={categories}
+        exchangeRates={exchangeRates}
         open={!!editingTxn}
         onOpenChange={(open) => {
           if (!open) setEditingTxn(null);

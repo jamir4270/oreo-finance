@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { TransactionsPageClient } from "@/components/transactions/TransactionsPageClient";
+import { getExchangeRates } from "@/lib/exchange-rates";
 
 export default async function TransactionsPage() {
   const supabase = await createClient();
@@ -15,7 +16,8 @@ export default async function TransactionsPage() {
     .from("transactions")
     .select(`
       *,
-      account:accounts!transactions_account_id_fkey (name),
+      account:accounts!transactions_account_id_fkey (name, currency),
+      to_account:accounts!transactions_to_account_id_fkey (name, currency),
       category:categories (name, icon, txn_type)
     `)
     .eq("user_id", userData.user.id)
@@ -36,12 +38,16 @@ export default async function TransactionsPage() {
     .eq("user_id", userData.user.id)
     .order("name");
 
+  // Fetch exchange rates
+  const { rates } = await getExchangeRates();
+
   return (
     <div className="flex flex-1 flex-col p-6 md:p-10 max-w-5xl mx-auto w-full">
       <TransactionsPageClient 
         transactions={transactions || []} 
         accounts={accounts || []}
         categories={categories || []}
+        exchangeRates={rates}
       />
     </div>
   );

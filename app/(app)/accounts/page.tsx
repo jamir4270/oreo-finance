@@ -20,19 +20,34 @@ export default async function AccountsPage() {
   // Fetch accounts (active and archived) along with their transactions
   const { data: rawAccounts } = await supabase
     .from("accounts")
-    .select("id, name, type, currency, icon, archived_at, transactions!account_id(amount, type)")
+    .select(`
+      id, name, type, currency, icon, archived_at, 
+      outgoing_transactions:transactions!transactions_account_id_fkey(amount, type),
+      incoming_transfers:transactions!transactions_to_account_id_fkey(to_amount, type)
+    `)
     .eq("user_id", userData.user.id)
     .order("name");
 
   // Calculate balances
   const accounts = (rawAccounts || []).map((account: any) => {
     let balance = 0;
-    if (account.transactions) {
-      account.transactions.forEach((txn: any) => {
+    
+    // Process outgoing (income adds, expense/transfer subtracts)
+    if (account.outgoing_transactions) {
+      account.outgoing_transactions.forEach((txn: any) => {
         if (txn.type === "income") {
           balance += Number(txn.amount);
-        } else if (txn.type === "expense") {
+        } else if (txn.type === "expense" || txn.type === "transfer") {
           balance -= Number(txn.amount);
+        }
+      });
+    }
+    
+    // Process incoming transfers (adds to_amount)
+    if (account.incoming_transfers) {
+      account.incoming_transfers.forEach((txn: any) => {
+        if (txn.type === "transfer" && txn.to_amount) {
+          balance += Number(txn.to_amount);
         }
       });
     }
