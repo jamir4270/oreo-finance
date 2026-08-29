@@ -1,20 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
-import { logout } from "@/app/actions/auth";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { LogOut } from "lucide-react";
 import Image from "next/image";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PlusCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-/**
- * Dashboard placeholder — Phase 5.
- *
- * Proves the authenticated session works end-to-end:
- *  - Shows the logged-in user's email
- *  - Shows their base_currency setting
- *  - Provides a logout button
- *
- * Phase 6+ will replace this with the full app shell and dashboard content.
- */
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
@@ -27,88 +16,73 @@ export default async function DashboardPage() {
     .eq("id", user!.id)
     .single();
 
+  const currencySymbol = profile?.base_currency === "USD" ? "$" : 
+                         profile?.base_currency === "EUR" ? "€" :
+                         profile?.base_currency === "GBP" ? "£" :
+                         profile?.base_currency === "PHP" ? "₱" :
+                         profile?.base_currency;
+
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-4 py-12">
-      <div className="flex w-full max-w-md flex-col items-center gap-8">
-        {/* Mascot */}
-        <div
-          className="flex items-center justify-center rounded-2xl bg-card p-5"
-          style={{
-            boxShadow:
-              "0 4px 24px rgba(86, 86, 118, 0.08), 0 1px 4px rgba(86, 86, 118, 0.04)",
-          }}
-        >
-          <Image
-            src="/oreo.svg"
-            alt="Oreo — pixel-art black cat mascot"
-            width={80}
-            height={80}
-            className="h-20 w-20"
-            style={{ imageRendering: "pixelated" }}
-            priority
-          />
-        </div>
+    <div className="flex flex-col gap-8 p-6 md:p-10 max-w-5xl mx-auto w-full">
+      {/* Header & Balance */}
+      <div className="flex flex-col items-center text-center gap-2 mt-4 md:mt-8">
+        <span className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+          Total Balance
+        </span>
+        <h1 className="font-mono text-5xl md:text-7xl font-semibold tracking-tight text-oreo-slate-purple">
+          {currencySymbol}0.00
+        </h1>
+      </div>
 
-        <div className="text-center">
-          <h1 className="font-heading text-2xl font-semibold text-oreo-slate-purple">
-            Dashboard
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            You&apos;re logged in — the shell is coming in Phase 6
-          </p>
-        </div>
+      {/* Empty State / Welcome */}
+      <Card
+        className="w-full border-0 mt-8"
+        style={{
+          boxShadow:
+            "0 4px 24px rgba(86, 86, 118, 0.08), 0 1px 4px rgba(86, 86, 118, 0.04)",
+        }}
+      >
+        <CardContent className="flex flex-col items-center gap-4 pt-10 pb-10 text-center">
+          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-oreo-lavender/50">
+            <Image
+              src="/oreo.svg"
+              alt="Oreo Mascot"
+              width={64}
+              height={64}
+              className="h-16 w-16"
+              style={{ imageRendering: "pixelated" }}
+            />
+          </div>
+          <div className="flex flex-col gap-1 max-w-sm">
+            <h2 className="font-heading text-2xl font-semibold text-oreo-slate-purple">
+              Welcome to Oreo!
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              You&apos;re all set up. Once you add your first account and log some transactions, they&apos;ll show up here.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* User info card */}
-        <Card
-          className="w-full border-0"
-          style={{
-            boxShadow:
-              "0 4px 24px rgba(86, 86, 118, 0.08), 0 1px 4px rgba(86, 86, 118, 0.04)",
-          }}
-        >
-          <CardContent className="flex flex-col gap-4 pt-6 pb-6">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs uppercase tracking-wide text-muted-foreground">
-                Email
-              </span>
-              <span className="text-sm font-medium text-foreground">
-                {user?.email}
-              </span>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <span className="text-xs uppercase tracking-wide text-muted-foreground">
-                Base Currency
-              </span>
-              <span className="font-mono text-sm font-medium text-oreo-dusty-teal">
-                {profile?.base_currency || "Not set"}
-              </span>
-            </div>
-
-            <form action={logout}>
-              <Button
-                type="submit"
-                variant="outline"
-                className="w-full mt-2"
-              >
-                <LogOut className="h-4 w-4" />
-                Log out
-              </Button>
-            </form>
+      {/* Grid Placeholders for Future Phases */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-60">
+        <Card className="border-dashed shadow-none bg-muted/30">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Recent Activity (Phase 9)</CardTitle>
+          </CardHeader>
+          <CardContent className="h-32 flex items-center justify-center">
+            <span className="text-xs text-muted-foreground">No transactions yet</span>
           </CardContent>
         </Card>
-
-        {/* Status badge */}
-        <div
-          className="flex items-center gap-2 rounded-full bg-card px-5 py-2.5 text-sm text-muted-foreground"
-          style={{
-            boxShadow:
-              "0 2px 12px rgba(86, 86, 118, 0.06), 0 1px 3px rgba(86, 86, 118, 0.03)",
-          }}
-        >
-          <span className="inline-block h-2 w-2 rounded-full bg-oreo-dusty-teal" />
-          Phase 5 — authentication complete
-        </div>
+        
+        <Card className="border-dashed shadow-none bg-muted/30">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Accounts (Phase 7)</CardTitle>
+          </CardHeader>
+          <CardContent className="h-32 flex items-center justify-center">
+            <span className="text-xs text-muted-foreground">No accounts yet</span>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
