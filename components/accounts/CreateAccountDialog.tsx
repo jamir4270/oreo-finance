@@ -110,8 +110,16 @@ export function CreateAccountDialog({ baseCurrency }: CreateAccountDialogProps) 
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label>Icon</Label>
+            <Label>Icon (Optional)</Label>
             <IconPicker value={icon} onChange={setIcon} className="w-full" />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="initial_balance">Initial Balance (Optional)</Label>
+            <Input id="initial_balance" name="initial_balance" type="number" step="0.01" min="0" placeholder="0.00" />
+            <p className="text-xs text-muted-foreground">
+              If greater than zero, an initial income transaction will be created.
+            </p>
           </div>
 
           {state?.error && (

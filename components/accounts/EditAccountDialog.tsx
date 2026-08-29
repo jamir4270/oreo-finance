@@ -38,6 +38,7 @@ export type AccountData = {
   type: string;
   currency: string;
   icon: string | null;
+  balance: number;
 };
 
 interface EditAccountDialogProps {
