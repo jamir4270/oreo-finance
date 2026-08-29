@@ -27,21 +27,50 @@ export async function createAccount(
     return { error: "Currency must be a 3-letter ISO code." };
   }
 
+  const initialBalanceStr = formData.get("initial_balance") as string;
+  const initialBalance = parseFloat(initialBalanceStr);
+
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData.user) {
     return { error: "You must be logged in to create an account." };
   }
 
-  const { error } = await supabase.from("accounts").insert({
+  const { data: newAccount, error } = await supabase.from("accounts").insert({
     user_id: userData.user.id,
     name,
     type,
     currency,
     icon: icon || null,
-  });
+  }).select().single();
 
   if (error) {
     return { error: error.message };
+  }
+
+  // Handle Initial Balance
+  if (!isNaN(initialBalance) && initialBalance > 0 && newAccount) {
+    // Find an income category to use for the initial balance
+    const { data: incomeCategories } = await supabase
+      .from("categories")
+      .select("id")
+      .eq("user_id", userData.user.id)
+      .eq("txn_type", "income")
+      .limit(1);
+
+    if (incomeCategories && incomeCategories.length > 0) {
+      const now = new Date().toISOString();
+      await supabase.from("transactions").insert({
+        user_id: userData.user.id,
+        type: "income",
+        amount: initialBalance,
+        account_id: newAccount.id,
+        category_id: incomeCategories[0].id,
+        txn_date: now.split("T")[0],
+        note: "Initial Balance",
+        client_created_at: now,
+        synced_at: now,
+      });
+    }
   }
 
   revalidatePath("/accounts");

@@ -91,7 +91,7 @@ export function AccountCard({ account, onEdit }: AccountCardProps) {
         </p>
         <div className="flex items-baseline gap-1">
           <span className="text-2xl font-semibold tracking-tight text-foreground">
-            0.00
+            {account.balance.toFixed(2)}
           </span>
           <span className="text-sm font-medium text-muted-foreground">
             {account.currency}

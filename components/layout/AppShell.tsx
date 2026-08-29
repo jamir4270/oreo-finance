@@ -3,13 +3,15 @@
 import { useState } from "react";
 import { DesktopSidebar } from "./DesktopSidebar";
 import { MobileBottomNav } from "./MobileBottomNav";
-import { AddTransactionModal } from "./AddTransactionModal";
+import { TransactionDialog, TxnAccountData, TxnCategoryData } from "../transactions/TransactionDialog";
 
 interface AppShellProps {
   children: React.ReactNode;
+  accounts: TxnAccountData[];
+  categories: TxnCategoryData[];
 }
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children, accounts, categories }: AppShellProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const handleOpenAddModal = () => setIsAddModalOpen(true);
@@ -28,7 +30,9 @@ export function AppShell({ children }: AppShellProps) {
       <MobileBottomNav onOpenAddTransaction={handleOpenAddModal} />
 
       {/* Global Add Transaction Modal */}
-      <AddTransactionModal
+      <TransactionDialog
+        accounts={accounts}
+        categories={categories}
         open={isAddModalOpen}
         onOpenChange={setIsAddModalOpen}
       />

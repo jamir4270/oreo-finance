@@ -17,17 +17,41 @@ export default async function AccountsPage() {
     .eq("id", userData.user.id)
     .single();
 
-  // Fetch accounts (active and archived)
-  const { data: accounts } = await supabase
+  // Fetch accounts (active and archived) along with their transactions
+  const { data: rawAccounts } = await supabase
     .from("accounts")
-    .select("id, name, type, currency, icon, archived_at")
+    .select("id, name, type, currency, icon, archived_at, transactions!account_id(amount, type)")
     .eq("user_id", userData.user.id)
     .order("name");
+
+  // Calculate balances
+  const accounts = (rawAccounts || []).map((account: any) => {
+    let balance = 0;
+    if (account.transactions) {
+      account.transactions.forEach((txn: any) => {
+        if (txn.type === "income") {
+          balance += Number(txn.amount);
+        } else if (txn.type === "expense") {
+          balance -= Number(txn.amount);
+        }
+      });
+    }
+    
+    return {
+      id: account.id,
+      name: account.name,
+      type: account.type,
+      currency: account.currency,
+      icon: account.icon,
+      archived_at: account.archived_at,
+      balance,
+    };
+  });
 
   return (
     <div className="flex flex-1 flex-col p-6 md:p-10 max-w-5xl mx-auto w-full">
       <AccountsPageClient 
-        accounts={accounts || []} 
+        accounts={accounts} 
         baseCurrency={profile?.base_currency || "USD"} 
       />
     </div>

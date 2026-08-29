@@ -25,8 +25,21 @@ export default async function AppLayout({
     redirect("/login");
   }
 
+  // Fetch accounts and categories for the global Add Transaction modal
+  const { data: accounts } = await supabase
+    .from("accounts")
+    .select("id, name, currency")
+    .eq("user_id", user.id)
+    .order("name");
+
+  const { data: categories } = await supabase
+    .from("categories")
+    .select("id, name, icon, txn_type")
+    .eq("user_id", user.id)
+    .order("name");
+
   return (
-    <AppShell>
+    <AppShell accounts={accounts || []} categories={categories || []}>
       {children}
     </AppShell>
   );
