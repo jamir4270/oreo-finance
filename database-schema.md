@@ -156,6 +156,8 @@ The central table. One row per logged Expense, Income, or Transfer.
 
 ### 4.5 `goals`
 
+> **⚠️ HALTED — This table exists in the schema but the goals feature will not be developed yet.** See build-phases.md Phase 11 for rationale. The table and its RLS policy remain in place for future use.
+
 | Column | Type | Constraints | Notes |
 |---|---|---|---|
 | `id` | `uuid` | PK, DEFAULT `gen_random_uuid()` | |
@@ -174,6 +176,8 @@ The central table. One row per logged Expense, Income, or Transfer.
 ---
 
 ### 4.6 `goal_contributions`
+
+> **⚠️ HALTED — This table exists in the schema but the goals feature will not be developed yet.** See build-phases.md Phase 11 for rationale.
 
 Junction table linking Income transactions to the Goal(s) they fund.
 

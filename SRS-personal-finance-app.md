@@ -108,7 +108,7 @@ Single class: **Authenticated User**. Each user's data (accounts, transactions, 
 ### 3.3 Transactions — Expense, Income, Transfer
 
 - FR-3.1: Users can add an Expense transaction: amount, currency (inherited from account), category, account, date, optional note/attachment.
-- FR-3.2: Users can add an Income transaction: amount, category, account, date, optional note, and optionally allocate all or part of it toward a Goal (if the target account has associated goals).
+- FR-3.2: Users can add an Income transaction: amount, category, account, date, optional note.
 - FR-3.3: Users can add a Transfer transaction between two of their own Accounts. If accounts differ in currency, the transfer must apply an exchange rate (fetched or cached) to compute the destination amount.
 - FR-3.4: Users can edit any transaction (amount, category, account, date, note).
 - FR-3.5: Users can delete any transaction; deletion recalculates affected account balances.
@@ -123,6 +123,8 @@ Single class: **Authenticated User**. Each user's data (accounts, transactions, 
 - FR-4.5: A default set of common categories should be pre-seeded for new users (e.g. Groceries, Transport, Salary), which users can then edit or delete.
 
 ### 3.5 Savings Goals
+
+> **⚠️ HALTED — This feature will not be developed yet.** The annotation-based contribution model (allocating income to goals without physically separating funds) has an integrity problem: goal progress can become misleading when the user spends money that was "allocated" to a goal. These requirements are preserved for future reference. A redesigned approach (e.g., account-linked goals) may be revisited post-v1.
 
 - FR-5.1: Users can create a Goal with a name, target amount, and optional target date. Goals are account-agnostic — a Goal is not tied to any specific Account, so it can be funded from income logged against any of the user's Accounts.
 - FR-5.2: When logging Income, users can optionally allocate the amount (or a portion) toward any Goal, regardless of which Account the income is logged against.

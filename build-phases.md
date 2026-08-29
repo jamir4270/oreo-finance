@@ -229,7 +229,7 @@ Phases are ordered so that each one only depends on work completed in a prior ph
 **Tasks:**
 
 - [ ] Build the "add expense" form: amount, category (filtered to expense-type categories), account, date, optional note (FR-3.1).
-- [ ] Build the "add income" form: amount, category, account, date, optional note — goal allocation deferred to Phase 11 (FR-3.2, partial).
+- [ ] Build the "add income" form: amount, category, account, date, optional note (FR-3.2).
 - [ ] Build the transaction list/history view, filterable by account, category, and date range.
 - [ ] Build "edit transaction" and "delete transaction" flows, recalculating the affected account's balance on either action (FR-3.4, FR-3.5).
 - [ ] Wire up real account balances on the Accounts page (replacing the Phase 7 placeholder) using actual transaction data.
@@ -257,6 +257,8 @@ Phases are ordered so that each one only depends on work completed in a prior ph
 ---
 
 ## Phase 11 — Goals
+
+> **⚠️ HALTED — This phase will not be developed yet.** The goals feature as designed (annotation-based contributions on income transactions) has an integrity problem: contributed amounts are not backed by actual separated funds, so goal progress can become misleading when the user spends money that was "allocated" to a goal. This phase is preserved here for future reference but is skipped in the current build sequence. A redesigned approach (e.g., account-linked goals) may be revisited post-v1.
 
 **Goal:** Users can define savings Goals and allocate income toward them.
 
