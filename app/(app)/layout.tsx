@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { AppShell } from "@/components/layout/AppShell";
 
 /**
  * Protected route group layout.
@@ -8,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
  * alongside the proxy's route protection. If the user somehow reaches
  * a protected page without a valid session, redirect to login.
  *
- * Phase 6 will add the full navigation shell (sidebar + bottom nav) here.
+ * Provides the main App Shell (sidebar + bottom nav).
  */
 export default async function AppLayout({
   children,
@@ -25,8 +26,8 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <AppShell>
       {children}
-    </div>
+    </AppShell>
   );
 }
