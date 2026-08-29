@@ -11,7 +11,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 For every new feature requested by the user, you MUST check the following files before proceeding:
 
 - `build-phases.md` - for timeline context and progression
-- `database-schema.md` - for database context
+- `database-schema.md and supabase/migrations` - for database context
 - `oreo-design-spec.md` - for design context and specifications
 - `SRS-personal-finance-app.md` - for overarching functional requirements
 
