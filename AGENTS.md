@@ -15,4 +15,6 @@ For every new feature requested by the user, you MUST check the following files 
 - `oreo-design-spec.md` - for design context and specifications
 - `SRS-personal-finance-app.md` - for overarching functional requirements
 
+Create implementation plan after and we'll go from there with my approval, ask open questions to further refine and clarify the plan before we proceed.
+
 <!-- END:nextjs-agent-rules -->
