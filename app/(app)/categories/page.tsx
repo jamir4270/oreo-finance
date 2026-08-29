@@ -1,22 +1,27 @@
-export default function CategoriesPage() {
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { CategoriesPageClient } from "@/components/categories/CategoriesPageClient";
+
+export default async function CategoriesPage() {
+  const supabase = await createClient();
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) {
+    redirect("/login");
+  }
+
+  // Fetch user's categories
+  const { data: categories } = await supabase
+    .from("categories")
+    .select("id, name, txn_type, icon, is_default")
+    .eq("user_id", userData.user.id)
+    .order("name");
+
   return (
     <div className="flex flex-1 flex-col p-6 md:p-10 max-w-5xl mx-auto w-full">
-      <div className="flex flex-col gap-2 border-b border-border pb-6">
-        <h1 className="font-heading text-3xl font-semibold tracking-tight text-oreo-slate-purple">
-          Categories
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Manage your transaction categories and icons.
-        </p>
-      </div>
-      <div className="flex flex-1 items-center justify-center mt-12">
-        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-muted/30 p-12 text-center">
-          <h2 className="font-heading text-xl text-oreo-slate-purple">Coming in Phase 8</h2>
-          <p className="text-sm text-muted-foreground max-w-xs">
-            This section will contain the category management and icon picker.
-          </p>
-        </div>
-      </div>
+      <CategoriesPageClient 
+        categories={categories || []} 
+      />
     </div>
   );
 }
