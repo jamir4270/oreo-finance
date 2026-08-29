@@ -1,26 +1,150 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+ * Oreo Design System — Color & Typography Tokens
+ * 
+ * Palette from design spec §2:
+ *   Lavender  #d8dcff  — backgrounds
+ *   Periwinkle #aeadf0 — secondary/accent
+ *   Dusty Rose #c38d94 — expense highlights
+ *   Mauve     #a76571  — expense/destructive
+ *   Slate Purple #565676 — primary/interactive
+ *   Dusty Teal #5f8f8a / #93bcb7 — income/positive
+ *
+ * Typography (§3): Fredoka (display) + Inter (body) + JetBrains Mono (monetary)
+ */
 
 @theme inline {
+  /* === Font families === */
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+  --font-heading: var(--font-fredoka);
+
+  /* === Shadcn semantic color mappings === */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* === Chart colors — mapped to Oreo palette === */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* === Sidebar === */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* === Oreo palette — direct Tailwind tokens === */
+  /* Usage: bg-oreo-lavender, text-oreo-mauve, border-oreo-periwinkle, etc. */
+  --color-oreo-lavender: #d8dcff;
+  --color-oreo-periwinkle: #aeadf0;
+  --color-oreo-dusty-rose: #c38d94;
+  --color-oreo-mauve: #a76571;
+  --color-oreo-slate-purple: #565676;
+  --color-oreo-dusty-teal: #5f8f8a;
+  --color-oreo-dusty-teal-light: #93bcb7;
+  --color-oreo-surface: #f0f1ff;
+
+  /* === Border radius — generous, soft, approachable (§1) === */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* === Light theme (only — design spec is light-palette-only) === */
+:root {
+  /* Backgrounds */
+  --background: #d8dcff;
+  --foreground: #3d3d5c;
+
+  /* Cards & popovers — near-white with ambient lavender tint */
+  --card: #f0f1ff;
+  --card-foreground: #3d3d5c;
+  --popover: #f0f1ff;
+  --popover-foreground: #3d3d5c;
+
+  /* Primary — deep slate purple (§2: "only color used for primary CTAs") */
+  --primary: #565676;
+  --primary-foreground: #ffffff;
+
+  /* Secondary — soft periwinkle */
+  --secondary: #aeadf0;
+  --secondary-foreground: #3d3d5c;
+
+  /* Muted — lighter lavender for subtle backgrounds */
+  --muted: #e8eaff;
+  --muted-foreground: #7a7a9a;
+
+  /* Accent — periwinkle for hover/selected states */
+  --accent: #c8caef;
+  --accent-foreground: #3d3d5c;
+
+  /* Destructive — muted mauve (§2: expense amounts, over-budget, destructive) */
+  --destructive: #a76571;
+
+  /* Borders — soft lavender-tinted */
+  --border: #c3c7ef;
+  --input: #c3c7ef;
+  --ring: #aeadf0;
+
+  /* Generous corner radii for the cozy, rounded aesthetic */
+  --radius: 0.875rem;
+
+  /* Chart colors — Oreo palette for consistent meaning across views (§6.7) */
+  --chart-1: #565676;
+  --chart-2: #aeadf0;
+  --chart-3: #a76571;
+  --chart-4: #5f8f8a;
+  --chart-5: #c38d94;
+
+  /* Sidebar */
+  --sidebar: #f0f1ff;
+  --sidebar-foreground: #3d3d5c;
+  --sidebar-primary: #565676;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8eaff;
+  --sidebar-accent-foreground: #3d3d5c;
+  --sidebar-border: #c3c7ef;
+  --sidebar-ring: #aeadf0;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
 }
