@@ -6,4 +6,13 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
+## Development Process Rules
+
+For every new feature requested by the user, you MUST check the following files before proceeding:
+
+- `build-phases.md` - for timeline context and progression
+- `database-schema.md` - for database context
+- `oreo-design-spec.md` - for design context and specifications
+- `SRS-personal-finance-app.md` - for overarching functional requirements
+
 <!-- END:nextjs-agent-rules -->
