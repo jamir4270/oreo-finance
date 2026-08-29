@@ -192,7 +192,8 @@ Phases are ordered so that each one only depends on work completed in a prior ph
 
 **Tasks:**
 
-- [ ] Build the Accounts list/overview page, showing each account's name, type, currency, and current balance (FR-2.4 — balance can start as a simple placeholder/zero calculation until Transactions exist in Phase 9).
+- [ ] Build the curated icon set (~50–100 Lucide icons) as a reusable picker component.
+- [ ] Build the Accounts list/overview page, showing each account's name, type, currency, and current balance (FR-2.4 — note: balance will start as a hardcoded 0.00 placeholder until Transactions are fully implemented in Phase 9).
 - [ ] Build the "create account" flow: name, type, fixed currency (FR-2.1).
 - [ ] Build the "edit account" flow: name, type, icon/color — currency remains non-editable by omission from the edit form (FR-2.2).
 - [ ] Build the "archive account" flow (soft-delete), including hiding archived accounts from active views while keeping them queryable/restorable (FR-2.3).
@@ -209,7 +210,6 @@ Phases are ordered so that each one only depends on work completed in a prior ph
 
 **Tasks:**
 
-- [ ] Build the curated icon set (~50–100 Lucide icons) as a reusable picker component.
 - [ ] Build the Categories list page, grouped or filterable by transaction type (Expense/Income/Transfer).
 - [ ] Build the "create category" flow: name, type, icon (FR-4.1, FR-4.2).
 - [ ] Build the "edit category" flow: name, icon (FR-4.3).
