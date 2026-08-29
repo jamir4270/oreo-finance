@@ -31,11 +31,12 @@ export function TransactionDetailDialog({
   if (!transaction) return null;
 
   const isExpense = transaction.type === "expense";
+  const isTransfer = transaction.type === "transfer";
   const iconName = transaction.category?.icon || "Tag";
   const Icon = (LucideIcons as any)[iconName] || LucideIcons.Tag;
 
-  const amountColor = isExpense ? "text-oreo-mauve" : "text-oreo-dusty-teal";
-  const prefix = isExpense ? "-" : "+";
+  const amountColor = isTransfer ? "text-foreground" : isExpense ? "text-oreo-mauve" : "text-oreo-dusty-teal";
+  const prefix = isTransfer ? "" : isExpense ? "-" : "+";
 
   const dateObj = new Date(transaction.txn_date);
   // Using date-fns or native format
@@ -71,10 +72,35 @@ export function TransactionDetailDialog({
           <div className="flex items-start gap-3 w-full min-w-0">
             <Wallet className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-sm font-medium text-foreground">Account</span>
+              <span className="text-sm font-medium text-foreground">
+                {isTransfer ? "Source Account" : "Account"}
+              </span>
               <span className="text-sm text-muted-foreground truncate">{transaction.account?.name || "Unknown Account"}</span>
             </div>
           </div>
+
+          {isTransfer && transaction.to_account?.name && (
+            <div className="flex items-start gap-3 w-full min-w-0">
+              <Wallet className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="text-sm font-medium text-foreground">Destination Account</span>
+                <span className="text-sm text-muted-foreground truncate">{transaction.to_account.name}</span>
+              </div>
+            </div>
+          )}
+
+          {isTransfer && transaction.to_amount != null && transaction.exchange_rate != null && transaction.exchange_rate !== 1 && (
+            <div className="flex items-start gap-3 w-full min-w-0">
+              <TagIcon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="text-sm font-medium text-foreground">Converted Amount</span>
+                <span className="text-sm text-muted-foreground truncate">
+                  {transaction.to_amount.toFixed(2)} {transaction.to_account?.currency} 
+                  <span className="opacity-70 ml-1 text-xs">(Rate: {transaction.exchange_rate.toFixed(4)})</span>
+                </span>
+              </div>
+            </div>
+          )}
 
           <div className="flex items-start gap-3 w-full min-w-0">
             <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
@@ -103,10 +129,10 @@ export function TransactionDetailDialog({
           )}
         </div>
 
-        <div className="mt-4 flex gap-3">
+        <div className="mt-4 flex flex-col sm:flex-row gap-3 w-full">
           <Button 
             variant="outline" 
-            className="w-full"
+            className="w-full sm:flex-1"
             onClick={() => {
               onOpenChange(false);
               onEdit(transaction);
@@ -116,7 +142,7 @@ export function TransactionDetailDialog({
           </Button>
           <Button 
             variant="destructive" 
-            className="w-full"
+            className="w-full sm:flex-1"
             onClick={() => {
               onOpenChange(false);
               onDelete(transaction);

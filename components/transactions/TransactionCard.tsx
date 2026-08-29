@@ -21,12 +21,13 @@ interface TransactionCardProps {
 
 export function TransactionCard({ transaction, onClick }: TransactionCardProps) {
   const isExpense = transaction.type === "expense";
+  const isTransfer = transaction.type === "transfer";
   const iconName = transaction.category?.icon || "Tag";
   const Icon = (LucideIcons as any)[iconName] || LucideIcons.Tag;
 
   // Design Spec compliance for transaction colors
-  const amountColor = isExpense ? "text-oreo-mauve" : "text-oreo-dusty-teal";
-  const prefix = isExpense ? "-" : "+";
+  const amountColor = isTransfer ? "text-foreground" : isExpense ? "text-oreo-mauve" : "text-oreo-dusty-teal";
+  const prefix = isTransfer ? "" : isExpense ? "-" : "+";
 
   return (
     <div 
@@ -49,7 +50,10 @@ export function TransactionCard({ transaction, onClick }: TransactionCardProps) 
             </h3>
           </div>
           <div className="text-xs text-muted-foreground flex items-center gap-1 overflow-hidden whitespace-nowrap">
-            <span className="shrink-0">{transaction.account?.name || "Unknown Account"}</span>
+            <span className="shrink-0">
+              {transaction.account?.name || "Unknown Account"}
+              {isTransfer && transaction.to_account?.name && ` → ${transaction.to_account.name}`}
+            </span>
             {transaction.note && (
               <>
                 <span className="shrink-0">•</span>
