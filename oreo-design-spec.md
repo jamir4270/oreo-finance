@@ -115,6 +115,9 @@ Navigation must expose all features at every breakpoint (FR-11.2) — nothing mo
 - Over-budget state uses mauve/rose, on-track uses periwinkle/slate — never color alone; always paired with a numeric label ("$40 over" / "$120 left").
 
 ### 6.6 Goals
+
+> **⚠️ HALTED — This screen will not be developed yet.** See build-phases.md Phase 11 for rationale. Design direction preserved for future reference.
+
 - Card per goal: name, target date (if set), progress ring or bar, rolled-up total from contributing accounts (FR-5.3).
 - Milestone moments (25/50/75/100%) are where the mascot celebration appears.
 
