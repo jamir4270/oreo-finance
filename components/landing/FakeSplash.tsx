@@ -20,7 +20,7 @@ export function FakeSplash() {
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5, ease: "easeInOut" }}
-          className="fixed inset-0 z-[9999] bg-[#d8dcff] flex items-center justify-center pointer-events-none"
+          className="fixed inset-0 z-[50] bg-[#d8dcff] flex items-center justify-center pointer-events-none"
         >
           <Image
             src="/oreo.svg"

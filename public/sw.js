@@ -1,8 +1,7 @@
-const CACHE_NAME = 'oreo-finance-v1';
+const CACHE_NAME = 'oreo-finance-v2';
 const OFFLINE_URL = '/offline.html';
 
 const ASSETS_TO_CACHE = [
-  '/',
   OFFLINE_URL,
   '/oreo.svg',
   '/oreo.png',

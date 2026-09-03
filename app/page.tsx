@@ -7,5 +7,5 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  return <LandingPageClient user={user} />;
+  return <LandingPageClient isLoggedIn={!!user} />;
 }
