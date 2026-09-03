@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { motion } from "motion/react";
+import { motion, type Variants } from "motion/react";
 
 interface MascotProps {
   pose?: "idle" | "wave" | "celebrate" | "sleeping" | "confused";
@@ -10,7 +10,7 @@ interface MascotProps {
 }
 
 export function Mascot({ pose = "idle", className }: MascotProps) {
-  const variants = {
+  const variants: Variants = {
     idle: {
       y: [0, -4, 0],
       transition: {
