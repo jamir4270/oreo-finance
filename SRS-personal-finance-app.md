@@ -157,6 +157,8 @@ Single class: **Authenticated User**. Each user's data (accounts, transactions, 
 
 ### 3.9 Offline Support & Sync (PWA)
 
+> **⚠️ HALTED / ROLLED BACK — Full offline data mutation will not be developed.** The application is built on an online-first architecture (Next.js Server Components, Server Actions). Bolting on an offline-first sync engine creates massive architectural friction. The app will remain online-first. Basic PWA installability (FR-9.1) and Live Multi-Device Sync (FR-9.6) are still supported.
+
 - FR-9.1: The application is installable as a PWA on both mobile and desktop platforms.
 - FR-9.2: Users can log Expense/Income/Transfer transactions while offline; these are queued locally.
 - FR-9.3: When connectivity is restored, queued transactions automatically sync to the server.
@@ -165,6 +167,8 @@ Single class: **Authenticated User**. Each user's data (accounts, transactions, 
 - FR-9.6: **Live multi-device sync (v1 requirement, distinct from offline queueing above):** while online, changes made on one device (e.g. logging a transaction on mobile) are pushed live to any other open, connected session for that user (e.g. a desktop browser tab already open) via Supabase Realtime, without requiring a manual refresh or navigation.
 
 ### 3.10 Daily Reminder Notification
+
+> **⚠️ HALTED — This feature will not be developed.** The feature relies on client-side scheduled notifications, which cannot reliably wake up a closed progressive web app (PWA) on iOS or Android. Because a push server is out of scope for v1, this feature has been skipped. Requirements are preserved below for historical context.
 
 - FR-10.1: The app sends a local (client-side) daily reminder notification prompting the user to log their transactions.
 - FR-10.2: The reminder time is fully user-configurable and can be changed at any time in settings.
@@ -206,7 +210,7 @@ Single class: **Authenticated User**. Each user's data (accounts, transactions, 
 | NFR-1 | The application must be responsive and fully usable on both desktop and mobile browser widths. |
 | NFR-2 | Monetary calculations must avoid floating-point rounding errors (use decimal-safe storage/arithmetic). |
 | NFR-3 | User data must be isolated per account via Row-Level Security; no cross-user data leakage. |
-| NFR-4 | The app must remain usable for transaction logging without an internet connection once offline support ships. |
+| NFR-4 | **(HALTED)** ~~The app must remain usable for transaction logging without an internet connection once offline support ships.~~ (App is strictly online-first). |
 | NFR-5 | Exchange rate lookups must not block transaction entry; cached rates are used by default. |
 | NFR-6 | The UI must reflect the defined color palette and pixel-cat branding consistently. |
 | NFR-7 | Page load and interaction performance should feel instant for core flows (add/edit/delete transaction) — target sub-second UI feedback, with sync happening in the background where applicable. |
