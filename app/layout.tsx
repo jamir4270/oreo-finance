@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fredoka, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { PwaRegistration } from "@/components/PwaRegistration";
 
 /**
  * Typography (Design Spec §3):
@@ -39,7 +40,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${fredoka.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <PwaRegistration />
+      </body>
     </html>
   );
 }
