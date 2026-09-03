@@ -3,6 +3,7 @@
 import * as React from "react";
 import * as LucideIcons from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export interface BudgetCardData {
   id: string;
@@ -88,17 +89,36 @@ export function BudgetCard({ budget, baseCurrency, onClick }: BudgetCardProps) {
 
       {/* Progress bar */}
       <div className="flex flex-col gap-1.5">
-        <div className="h-3 w-full overflow-hidden rounded-full bg-muted/60">
-          <div
-            className={cn(
-              "h-full rounded-full transition-all duration-500 ease-out",
-              isOverBudget
-                ? "bg-oreo-mauve"
-                : "bg-oreo-periwinkle"
-            )}
-            style={{ width: `${isOverBudget ? 100 : progressPercent}%` }}
-          />
-        </div>
+        <TooltipProvider>
+          <Tooltip delayDuration={200}>
+            <TooltipTrigger asChild>
+              <div className="relative h-3 w-full overflow-hidden rounded-full bg-muted/60 cursor-help">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all duration-500 ease-out",
+                    isOverBudget
+                      ? "bg-oreo-mauve"
+                      : "bg-oreo-periwinkle"
+                  )}
+                  style={{ width: `${isOverBudget ? 100 : progressPercent}%` }}
+                />
+                {/* 80% Threshold marker */}
+                <div className="absolute top-0 bottom-0 left-[80%] w-[2px] bg-background/50 z-10" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="p-3 max-w-[200px] flex flex-col gap-2">
+              <div className="text-sm font-medium">
+                {isOverBudget 
+                  ? `${currencySymbol}${Math.abs(remaining).toFixed(2)} over budget` 
+                  : `${currencySymbol}${remaining.toFixed(2)} left to spend`}
+              </div>
+              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                <input type="checkbox" className="rounded border-input text-oreo-periwinkle focus:ring-oreo-periwinkle" />
+                Rollover to next month
+              </label>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
         {/* Numeric label */}
         <div className="flex items-center justify-between">

@@ -31,13 +31,21 @@ export default async function AccountsPage() {
   // Calculate balances
   const accounts = (rawAccounts || []).map((account: any) => {
     let balance = 0;
+    let income = 0;
+    let expense = 0;
     
     // Process outgoing (income adds, expense/transfer subtracts)
     if (account.outgoing_transactions) {
       account.outgoing_transactions.forEach((txn: any) => {
         if (txn.type === "income") {
-          balance += Number(txn.amount);
-        } else if (txn.type === "expense" || txn.type === "transfer") {
+          const amt = Number(txn.amount);
+          balance += amt;
+          income += amt;
+        } else if (txn.type === "expense") {
+          const amt = Number(txn.amount);
+          balance -= amt;
+          expense += amt;
+        } else if (txn.type === "transfer") {
           balance -= Number(txn.amount);
         }
       });
@@ -60,6 +68,8 @@ export default async function AccountsPage() {
       icon: account.icon,
       archived_at: account.archived_at,
       balance,
+      income,
+      expense
     };
   });
 

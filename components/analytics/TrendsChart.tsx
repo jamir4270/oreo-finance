@@ -174,6 +174,7 @@ export function TrendsChart({
                       cursor={false}
                       content={
                         <ChartTooltipContent 
+                          className="shadow-oreo-md rounded-xl text-[14px]"
                           indicator="dot" 
                           formatter={(value, name) => (
                             <div className="flex items-center gap-2">
@@ -192,6 +193,9 @@ export function TrendsChart({
                       stroke="var(--color-expense)"
                       strokeWidth={2}
                       stackId="2"
+                      isAnimationActive={true}
+                      animationDuration={800}
+                      animationEasing="ease-out"
                     />
                     <Area
                       dataKey="income"
@@ -201,6 +205,9 @@ export function TrendsChart({
                       stroke="var(--color-income)"
                       strokeWidth={2}
                       stackId="1"
+                      isAnimationActive={true}
+                      animationDuration={800}
+                      animationEasing="ease-out"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -245,7 +252,7 @@ export function TrendsChart({
                   year === new Date().getFullYear();
 
                 return (
-                  <div key={`day-${day}`} className="bg-background min-h-[80px] p-1 sm:p-2 border-t border-border/50 flex flex-col gap-1 transition-colors hover:bg-muted/20 min-w-0">
+                  <div key={`day-${day}`} className="bg-background min-h-[90px] p-1 sm:p-2 border-t border-border/50 flex flex-col gap-1 transition-colors hover:bg-muted/20 min-w-0">
                     <span className={cn(
                       "text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full shrink-0",
                       isToday ? "bg-oreo-slate-purple text-primary-foreground" : "text-muted-foreground"
@@ -256,13 +263,13 @@ export function TrendsChart({
                       {data?.income ? (
                         <div className="text-[10px] sm:text-xs font-mono font-medium text-oreo-dusty-teal truncate bg-oreo-dusty-teal/10 px-1 py-0.5 rounded flex items-center gap-1 min-w-0">
                           <span className="opacity-70 shrink-0">+</span>
-                          <span className="truncate">{currencySymbol}{data.income.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                          <span className="truncate">{currencySymbol}{data.income.toLocaleString(undefined, { notation: "compact", maximumFractionDigits: 1 })}</span>
                         </div>
                       ) : null}
                       {data?.expense ? (
                         <div className="text-[10px] sm:text-xs font-mono font-medium text-oreo-mauve truncate bg-oreo-mauve/10 px-1 py-0.5 rounded flex items-center gap-1 min-w-0">
                           <span className="opacity-70 shrink-0">-</span>
-                          <span className="truncate">{currencySymbol}{data.expense.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                          <span className="truncate">{currencySymbol}{data.expense.toLocaleString(undefined, { notation: "compact", maximumFractionDigits: 1 })}</span>
                         </div>
                       ) : null}
                     </div>

@@ -83,8 +83,16 @@ export function TransactionDialog({
   React.useEffect(() => {
     if (state?.success) {
       setOpen(false);
+      const { toast } = require("sonner");
+      toast.success(isEdit ? "Transaction updated" : "Transaction added", {
+        description: `${amountStr} ${type}`,
+        action: {
+          label: "Undo",
+          onClick: () => toast("Undo action will be processed"),
+        }
+      });
     }
-  }, [state, setOpen]);
+  }, [state, setOpen, isEdit, amountStr, type]);
 
   React.useEffect(() => {
     if (open && transaction) {

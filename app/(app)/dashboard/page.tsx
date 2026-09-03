@@ -1,8 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
-import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlusCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { AnimatedCounter } from "@/components/ui/animated-counter";
+import { Mascot } from "@/components/ui/mascot";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -30,7 +29,7 @@ export default async function DashboardPage() {
           Total Balance
         </span>
         <h1 className="font-mono text-5xl md:text-7xl font-semibold tracking-tight text-oreo-slate-purple">
-          {currencySymbol}0.00
+          <AnimatedCounter value={0} prefix={currencySymbol} />
         </h1>
       </div>
 
@@ -44,14 +43,7 @@ export default async function DashboardPage() {
       >
         <CardContent className="flex flex-col items-center gap-4 pt-10 pb-10 text-center">
           <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-oreo-lavender/50">
-            <Image
-              src="/oreo.svg"
-              alt="Oreo Mascot"
-              width={64}
-              height={64}
-              className="h-16 w-16"
-              style={{ imageRendering: "pixelated" }}
-            />
+            <Mascot pose="idle" className="h-16 w-16" />
           </div>
           <div className="flex flex-col gap-1 max-w-sm">
             <h2 className="font-heading text-2xl font-semibold text-oreo-slate-purple">

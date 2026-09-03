@@ -5,9 +5,11 @@ import { AccountCard } from "./AccountCard";
 import { AccountData, EditAccountDialog } from "./EditAccountDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CreateAccountDialog } from "./CreateAccountDialog";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowDownRight, ArrowUpRight, Wallet } from "lucide-react";
 
 interface AccountsPageClientProps {
-  accounts: (AccountData & { archived_at: string | null })[];
+  accounts: (AccountData & { archived_at: string | null; income?: number; expense?: number })[];
   baseCurrency: string;
 }
 
@@ -16,6 +18,23 @@ export function AccountsPageClient({ accounts, baseCurrency }: AccountsPageClien
 
   const activeAccounts = accounts.filter(a => !a.archived_at);
   const archivedAccounts = accounts.filter(a => a.archived_at);
+
+  const totalBalance = activeAccounts.reduce((sum, acc) => sum + acc.balance, 0);
+  const totalIncome = activeAccounts.reduce((sum, acc) => sum + (acc.income || 0), 0);
+  const totalExpense = activeAccounts.reduce((sum, acc) => sum + (acc.expense || 0), 0);
+
+  const currencySymbol = React.useMemo(() => {
+    try {
+      const parts = new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency: baseCurrency,
+        currencyDisplay: "narrowSymbol",
+      }).formatToParts(0);
+      return parts.find((p) => p.type === "currency")?.value || baseCurrency;
+    } catch {
+      return baseCurrency;
+    }
+  }, [baseCurrency]);
 
   return (
     <>
@@ -29,6 +48,44 @@ export function AccountsPageClient({ accounts, baseCurrency }: AccountsPageClien
           </p>
         </div>
         <CreateAccountDialog baseCurrency={baseCurrency} />
+      </div>
+
+      <div className="mt-6 grid grid-cols-3 gap-4">
+        <Card className="border-0 shadow-sm bg-card" style={{ boxShadow: "0 4px 24px rgba(86, 86, 118, 0.04), 0 1px 4px rgba(86, 86, 118, 0.02)" }}>
+          <CardContent className="p-4 sm:p-6 flex flex-col gap-1">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <Wallet className="w-4 h-4" />
+              <span className="text-xs sm:text-sm font-medium">Total Balance</span>
+            </div>
+            <div className="font-mono text-lg sm:text-2xl font-semibold tracking-tight text-foreground truncate">
+              {currencySymbol}{totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-0 shadow-sm bg-card" style={{ boxShadow: "0 4px 24px rgba(86, 86, 118, 0.04), 0 1px 4px rgba(86, 86, 118, 0.02)" }}>
+          <CardContent className="p-4 sm:p-6 flex flex-col gap-1">
+            <div className="flex items-center gap-2 text-oreo-dusty-teal mb-1">
+              <ArrowUpRight className="w-4 h-4" />
+              <span className="text-xs sm:text-sm font-medium">Income</span>
+            </div>
+            <div className="font-mono text-lg sm:text-2xl font-semibold tracking-tight text-foreground truncate">
+              {currencySymbol}{totalIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-0 shadow-sm bg-card" style={{ boxShadow: "0 4px 24px rgba(86, 86, 118, 0.04), 0 1px 4px rgba(86, 86, 118, 0.02)" }}>
+          <CardContent className="p-4 sm:p-6 flex flex-col gap-1">
+            <div className="flex items-center gap-2 text-oreo-mauve mb-1">
+              <ArrowDownRight className="w-4 h-4" />
+              <span className="text-xs sm:text-sm font-medium">Expenses</span>
+            </div>
+            <div className="font-mono text-lg sm:text-2xl font-semibold tracking-tight text-foreground truncate">
+              {currencySymbol}{totalExpense.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="mt-8 flex-1">
