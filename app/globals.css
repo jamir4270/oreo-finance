@@ -70,6 +70,20 @@
   --color-oreo-dusty-teal-light: #93bcb7;
   --color-oreo-surface: #f0f1ff;
 
+  /* === Motion tokens === */
+  --ease-oreo: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-oreo-in: cubic-bezier(0.5, 0, 0.75, 0);
+  --duration-xs: 120ms;
+  --duration-sm: 180ms;
+  --duration-md: 260ms;
+  --duration-lg: 400ms;
+
+  /* === Elevation tokens === */
+  --shadow-oreo-sm: 0 1px 3px rgba(86,86,118,0.06), 0 1px 2px rgba(86,86,118,0.04);
+  --shadow-oreo-md: 0 4px 24px rgba(86,86,118,0.08), 0 1px 4px rgba(86,86,118,0.04);
+  --shadow-oreo-lg: 0 12px 40px rgba(86,86,118,0.14), 0 4px 12px rgba(86,86,118,0.06);
+  --shadow-oreo-glow-primary: 0 0 0 4px rgba(86,86,118,0.12);
+
   /* === Border radius — generous, soft, approachable (§1) === */
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);

@@ -192,7 +192,8 @@ Phases are ordered so that each one only depends on work completed in a prior ph
 
 **Tasks:**
 
-- [ ] Build the Accounts list/overview page, showing each account's name, type, currency, and current balance (FR-2.4 — balance can start as a simple placeholder/zero calculation until Transactions exist in Phase 9).
+- [ ] Build the curated icon set (~50–100 Lucide icons) as a reusable picker component.
+- [ ] Build the Accounts list/overview page, showing each account's name, type, currency, and current balance (FR-2.4 — note: balance will start as a hardcoded 0.00 placeholder until Transactions are fully implemented in Phase 9).
 - [ ] Build the "create account" flow: name, type, fixed currency (FR-2.1).
 - [ ] Build the "edit account" flow: name, type, icon/color — currency remains non-editable by omission from the edit form (FR-2.2).
 - [ ] Build the "archive account" flow (soft-delete), including hiding archived accounts from active views while keeping them queryable/restorable (FR-2.3).
@@ -209,7 +210,6 @@ Phases are ordered so that each one only depends on work completed in a prior ph
 
 **Tasks:**
 
-- [ ] Build the curated icon set (~50–100 Lucide icons) as a reusable picker component.
 - [ ] Build the Categories list page, grouped or filterable by transaction type (Expense/Income/Transfer).
 - [ ] Build the "create category" flow: name, type, icon (FR-4.1, FR-4.2).
 - [ ] Build the "edit category" flow: name, icon (FR-4.3).
@@ -229,7 +229,7 @@ Phases are ordered so that each one only depends on work completed in a prior ph
 **Tasks:**
 
 - [ ] Build the "add expense" form: amount, category (filtered to expense-type categories), account, date, optional note (FR-3.1).
-- [ ] Build the "add income" form: amount, category, account, date, optional note — goal allocation deferred to Phase 11 (FR-3.2, partial).
+- [ ] Build the "add income" form: amount, category, account, date, optional note (FR-3.2).
 - [ ] Build the transaction list/history view, filterable by account, category, and date range.
 - [ ] Build "edit transaction" and "delete transaction" flows, recalculating the affected account's balance on either action (FR-3.4, FR-3.5).
 - [ ] Wire up real account balances on the Accounts page (replacing the Phase 7 placeholder) using actual transaction data.
@@ -257,6 +257,8 @@ Phases are ordered so that each one only depends on work completed in a prior ph
 ---
 
 ## Phase 11 — Goals
+
+> **⚠️ HALTED — This phase will not be developed yet.** The goals feature as designed (annotation-based contributions on income transactions) has an integrity problem: contributed amounts are not backed by actual separated funds, so goal progress can become misleading when the user spends money that was "allocated" to a goal. This phase is preserved here for future reference but is skipped in the current build sequence. A redesigned approach (e.g., account-linked goals) may be revisited post-v1.
 
 **Goal:** Users can define savings Goals and allocate income toward them.
 
@@ -346,6 +348,8 @@ Phases are ordered so that each one only depends on work completed in a prior ph
 
 ## Phase 16 — Daily Reminder Notification
 
+> **⚠️ HALTED — This phase will not be developed.** The feature was intended to use purely local/client-side scheduled notifications without a backend push server. However, progressive web apps (PWAs) are aggressively suspended by mobile operating systems (both iOS and Android) when closed or backgrounded. A purely client-side scheduled notification cannot reliably wake up a closed PWA to alert the user at a specific time. Because a push server is out of scope for v1, this feature is skipped.
+
 **Goal:** Users get a local, user-configurable daily reminder to log their transactions.
 
 **Prerequisites:** Phase 15 complete (requires the service worker/PWA foundation).
@@ -361,6 +365,8 @@ Phases are ordered so that each one only depends on work completed in a prior ph
 ---
 
 ## Phase 17 — Offline Support & Sync (Fast-Follow)
+
+> **⚠️ HALTED / ROLLED BACK — This phase will not be developed.** Attempting to bolt a massive offline-first architecture (Dexie, full background sync, Client Components) onto an app that was fundamentally built as online-first (Next.js Server Components, Server Actions, direct Supabase queries) is an architectural mismatch. It causes major friction with routing and adds massive complexity for a feature that is out of scope for the current architecture. The app will remain strictly online-first.
 
 **Goal:** Users can log transactions with no internet connection, and have them sync automatically once back online.
 
