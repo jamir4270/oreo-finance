@@ -90,7 +90,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
                         value === iconName && "border-oreo-periwinkle bg-oreo-periwinkle"
                       )}
                     >
-                      <Icon className={cn("h-6 w-6 m-auto", value === iconName ? "text-primary-foreground" : "text-foreground")} />
+                      <Icon className={cn("h-6 w-6", value === iconName ? "text-primary-foreground" : "text-foreground")} />
                       {value === iconName && (
                         <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
                           <Check className="h-3 w-3" />

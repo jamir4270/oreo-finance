@@ -47,8 +47,9 @@ export const metadata: Metadata = {
   },
 };
 
-import NextTopLoader from "nextjs-toploader";
+
 import { FakeSplash } from "@/components/landing/FakeSplash";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -57,9 +58,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${fredoka.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <NextTopLoader color="var(--color-oreo-slate-purple)" showSpinner={false} shadow="0 0 10px var(--color-oreo-slate-purple),0 0 5px var(--color-oreo-slate-purple)" />
+
         <FakeSplash />
         {children}
+        <Toaster position="bottom-center" richColors />
         <PwaRegistration />
       </body>
     </html>

@@ -11,6 +11,7 @@ import confetti from "canvas-confetti";
 export function LandingPageClient({ user }: { user: any }) {
   const prefersReducedMotion = useReducedMotion();
   const [isTouch, setIsTouch] = useState(true); 
+  const [mounted, setMounted] = useState(false);
   
   const { scrollY } = useScroll();
   const headerBgOpacity = useTransform(scrollY, [0, 50], [0, 0.8]);
@@ -31,6 +32,7 @@ export function LandingPageClient({ user }: { user: any }) {
   const [balance, setBalance] = useState(1204.50);
 
   useEffect(() => {
+    setMounted(true);
     setIsTouch(window.matchMedia("(pointer: coarse)").matches);
     
     const handleMouseMove = (e: MouseEvent) => {
@@ -129,7 +131,7 @@ export function LandingPageClient({ user }: { user: any }) {
 
       <main className="flex-1 flex flex-col items-center relative overflow-hidden">
         {/* Blob Background */}
-        {!prefersReducedMotion && (
+        {mounted && !prefersReducedMotion && (
           <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-40">
             <motion.div 
               className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-oreo-lavender blur-3xl mix-blend-multiply"

@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export type BudgetCategoryData = {
   id: string;
@@ -74,6 +75,7 @@ export function CreateBudgetDialog({
   React.useEffect(() => {
     if (state?.success) {
       setOpen(false);
+      toast.success("Budget created successfully");
     }
   }, [state, setOpen]);
 

@@ -16,6 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 interface CategoriesPageClientProps {
   categories: CategoryData[];
 }
@@ -42,8 +43,10 @@ export function CategoriesPageClient({ categories }: CategoriesPageClientProps) 
     
     if (result?.error) {
       setDeleteError(result.error);
+      toast.error(result.error);
     } else {
       setDeletingCategory(null);
+      toast.success("Category deleted");
     }
   };
 
