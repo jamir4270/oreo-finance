@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 
 interface BudgetsPageClientProps {
   budgets: BudgetCardData[];
@@ -47,8 +48,10 @@ export function BudgetsPageClient({ budgets, categories, baseCurrency }: Budgets
 
     if (result?.error) {
       setDeleteError(result.error);
+      toast.error(result.error);
     } else {
       setDeletingBudget(null);
+      toast.success("Budget deleted");
     }
   };
 

@@ -49,6 +49,7 @@ export const metadata: Metadata = {
 
 
 import { FakeSplash } from "@/components/landing/FakeSplash";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -60,6 +61,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 
         <FakeSplash />
         {children}
+        <Toaster position="bottom-center" richColors />
         <PwaRegistration />
       </body>
     </html>

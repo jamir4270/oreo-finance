@@ -16,6 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { IconPicker } from "@/components/ui/icon-picker";
+import { toast } from "sonner";
 
 const TXN_TYPES = [
   { value: "expense", label: "Expense" },
@@ -41,6 +42,7 @@ export function CreateCategoryDialog() {
   React.useEffect(() => {
     if (state?.success) {
       setOpen(false);
+      toast.success("Category created successfully");
     }
   }, [state]);
 

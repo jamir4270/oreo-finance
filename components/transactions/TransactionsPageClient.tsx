@@ -109,6 +109,8 @@ export function TransactionsPageClient({
     
     if (result?.error) {
       setDeleteError(result.error);
+      const { toast } = require("sonner");
+      toast.error(result.error);
     } else {
       const deletedAmount = deletingTxn.amount;
       setDeletingTxn(null);
