@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { TransactionData, TxnAccountData, TxnCategoryData, TransactionDialog } from "./TransactionDialog";
 import { TransactionDetailDialog } from "./TransactionDetailDialog";
 import { TransactionCard } from "./TransactionCard";
@@ -16,13 +17,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Plus, Filter } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 
 interface TransactionsPageClientProps {
@@ -30,9 +30,29 @@ interface TransactionsPageClientProps {
   accounts: TxnAccountData[];
   categories: TxnCategoryData[];
   exchangeRates?: Record<string, number>;
+  totalPages: number;
+  currentPage: number;
+  initialFilters: {
+    type: string;
+    account: string;
+    category: string;
+    dateRange: string;
+  };
 }
 
-export function TransactionsPageClient({ transactions, accounts, categories, exchangeRates }: TransactionsPageClientProps) {
+export function TransactionsPageClient({ 
+  transactions, 
+  accounts, 
+  categories, 
+  exchangeRates,
+  totalPages,
+  currentPage,
+  initialFilters
+}: TransactionsPageClientProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [editingTxn, setEditingTxn] = React.useState<TransactionData | null>(null);
   const [viewingTxn, setViewingTxn] = React.useState<TransactionData | null>(null);
   const [deletingTxn, setDeletingTxn] = React.useState<TransactionData | null>(null);
@@ -40,23 +60,32 @@ export function TransactionsPageClient({ transactions, accounts, categories, exc
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [isCreateOpen, setIsCreateOpen] = React.useState(false);
 
-  // Filters state
-  const [filterType, setFilterType] = React.useState<string>("all");
-  const [filterAccount, setFilterAccount] = React.useState<string>("all");
-  const [filterCategory, setFilterCategory] = React.useState<string>("all");
+  const filterType = initialFilters.type;
+  const filterAccount = initialFilters.account;
+  const filterCategory = initialFilters.category;
+  const filterDateRange = initialFilters.dateRange;
 
-  // Apply filters
-  const filteredTransactions = React.useMemo(() => {
-    return transactions.filter((txn) => {
-      if (filterType !== "all" && txn.type !== filterType) return false;
-      if (filterAccount !== "all" && txn.account_id !== filterAccount && txn.to_account_id !== filterAccount) return false;
-      if (filterCategory !== "all" && txn.category_id !== filterCategory) return false;
-      return true;
-    });
-  }, [transactions, filterType, filterAccount, filterCategory]);
+  const updateFilter = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "all" || value === "all_time") {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+    // Reset to page 1 on filter change
+    params.set("page", "1");
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", newPage.toString());
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   // Group filtered transactions by date
-  const groupedTransactions = filteredTransactions.reduce((groups, txn) => {
+  const groupedTransactions = transactions.reduce((groups, txn) => {
     const date = txn.txn_date;
     if (!groups[date]) {
       groups[date] = [];
@@ -88,11 +117,11 @@ export function TransactionsPageClient({ transactions, accounts, categories, exc
   const EmptyState = () => (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/30 p-12 text-center mt-8">
       <p className="text-sm text-muted-foreground max-w-xs mb-4">
-        {transactions.length === 0 
+        {transactions.length === 0 && Object.keys(initialFilters).every(k => initialFilters[k as keyof typeof initialFilters] === "all" || initialFilters[k as keyof typeof initialFilters] === "all_time")
           ? "No transactions yet — add your first one to start tracking your spending."
           : "No transactions match your current filters."}
       </p>
-      {transactions.length === 0 && (
+      {transactions.length === 0 && Object.keys(initialFilters).every(k => initialFilters[k as keyof typeof initialFilters] === "all" || initialFilters[k as keyof typeof initialFilters] === "all_time") && (
         <Button onClick={() => setIsCreateOpen(true)}>Add Transaction</Button>
       )}
     </div>
@@ -121,9 +150,30 @@ export function TransactionsPageClient({ transactions, accounts, categories, exc
       </div>
 
       {/* Filter Bar */}
-      <div className="flex flex-col sm:flex-row gap-3 mt-6">
-        <Select value={filterType} onValueChange={(val) => setFilterType(val || "all")}>
-          <SelectTrigger className="w-full sm:w-[150px] capitalize">
+      <div className="grid grid-cols-2 md:flex md:flex-row flex-wrap gap-3 mt-6">
+        <Select value={filterDateRange} onValueChange={(val) => updateFilter("dateRange", val || "all_time")}>
+          <SelectTrigger className="w-full md:w-[150px] capitalize">
+            <span data-slot="select-value" className="flex flex-1 text-left truncate">
+              {
+                filterDateRange === "last_30" ? "Last 30 Days" :
+                filterDateRange === "this_month" ? "This Month" :
+                filterDateRange === "last_month" ? "Last Month" :
+                filterDateRange === "this_year" ? "This Year" :
+                "All Time"
+              }
+            </span>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all_time" label="All Time">All Time</SelectItem>
+            <SelectItem value="last_30" label="Last 30 Days">Last 30 Days</SelectItem>
+            <SelectItem value="this_month" label="This Month">This Month</SelectItem>
+            <SelectItem value="last_month" label="Last Month">Last Month</SelectItem>
+            <SelectItem value="this_year" label="This Year">This Year</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={filterType} onValueChange={(val) => updateFilter("type", val || "all")}>
+          <SelectTrigger className="w-full md:w-[150px] capitalize">
             <span data-slot="select-value" className="flex flex-1 text-left truncate">
               {filterType === "all" ? "All Types" : filterType}
             </span>
@@ -136,8 +186,8 @@ export function TransactionsPageClient({ transactions, accounts, categories, exc
           </SelectContent>
         </Select>
 
-        <Select value={filterAccount} onValueChange={(val) => setFilterAccount(val || "all")}>
-          <SelectTrigger className="w-full sm:w-[180px] capitalize">
+        <Select value={filterAccount} onValueChange={(val) => updateFilter("account", val || "all")}>
+          <SelectTrigger className="w-full md:w-[180px] capitalize">
             <span data-slot="select-value" className="flex flex-1 text-left truncate">
               {filterAccount === "all" ? "All Accounts" : accounts.find(a => a.id === filterAccount)?.name || "Account"}
             </span>
@@ -150,8 +200,8 @@ export function TransactionsPageClient({ transactions, accounts, categories, exc
           </SelectContent>
         </Select>
 
-        <Select value={filterCategory} onValueChange={(val) => setFilterCategory(val || "all")}>
-          <SelectTrigger className="w-full sm:w-[180px] capitalize">
+        <Select value={filterCategory} onValueChange={(val) => updateFilter("category", val || "all")}>
+          <SelectTrigger className="w-full md:w-[180px] capitalize">
             <span data-slot="select-value" className="flex flex-1 text-left truncate">
               {filterCategory === "all" ? "All Categories" : categories.find(c => c.id === filterCategory)?.name || "Category"}
             </span>
@@ -167,13 +217,12 @@ export function TransactionsPageClient({ transactions, accounts, categories, exc
         </Select>
       </div>
 
-      <div className="mt-6 flex-1">
-        {filteredTransactions.length === 0 ? (
+      <div className="mt-6 flex-1 flex flex-col pb-10">
+        {transactions.length === 0 ? (
           <EmptyState />
         ) : (
           <div className="flex flex-col gap-8">
             {sortedDates.map((date) => {
-              // Format date nicely (e.g., Today, Yesterday, or Aug 29, 2026)
               const dateObj = new Date(date);
               const today = new Date();
               const yesterday = new Date(today);
@@ -205,6 +254,33 @@ export function TransactionsPageClient({ transactions, accounts, categories, exc
                 </div>
               );
             })}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-8 border-t border-border pt-6 px-1">
+                <p className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages}
+                </p>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage <= 1}
+                  >
+                    <ChevronLeft className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Previous</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage >= totalPages}
+                  >
+                    <span className="hidden sm:inline">Next</span> <ChevronRight className="h-4 w-4 sm:ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
