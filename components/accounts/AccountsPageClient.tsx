@@ -50,42 +50,33 @@ export function AccountsPageClient({ accounts, baseCurrency }: AccountsPageClien
         <CreateAccountDialog baseCurrency={baseCurrency} />
       </div>
 
-      <div className="mt-6 grid grid-cols-3 gap-4">
-        <Card className="border-0 shadow-sm bg-card" style={{ boxShadow: "0 4px 24px rgba(86, 86, 118, 0.04), 0 1px 4px rgba(86, 86, 118, 0.02)" }}>
-          <CardContent className="p-4 sm:p-6 flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <Wallet className="w-4 h-4" />
-              <span className="text-xs sm:text-sm font-medium">Total Balance</span>
-            </div>
-            <div className="font-mono text-lg sm:text-2xl font-semibold tracking-tight text-foreground truncate">
-              {currencySymbol}{totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-          </CardContent>
-        </Card>
+      <div className="mt-6 flex flex-row items-center justify-between gap-2 px-1 sm:px-2">
+        <div className="flex flex-col min-w-0 flex-1">
+          <span className="text-[9px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground mb-0.5 sm:mb-1 truncate">
+            Total Balance
+          </span>
+          <span className="font-mono text-base sm:text-3xl font-semibold tracking-tight text-foreground truncate">
+            {currencySymbol}{totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
+        </div>
         
-        <Card className="border-0 shadow-sm bg-card" style={{ boxShadow: "0 4px 24px rgba(86, 86, 118, 0.04), 0 1px 4px rgba(86, 86, 118, 0.02)" }}>
-          <CardContent className="p-4 sm:p-6 flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-oreo-dusty-teal mb-1">
-              <ArrowUpRight className="w-4 h-4" />
-              <span className="text-xs sm:text-sm font-medium">Income</span>
-            </div>
-            <div className="font-mono text-lg sm:text-2xl font-semibold tracking-tight text-foreground truncate">
-              {currencySymbol}{totalIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-end min-w-0 flex-1">
+          <span className="text-[9px] sm:text-xs font-medium uppercase tracking-wider text-oreo-dusty-teal mb-0.5 sm:mb-1 truncate">
+            Income
+          </span>
+          <span className="font-mono text-sm sm:text-3xl font-semibold tracking-tight text-foreground truncate">
+            {currencySymbol}{totalIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
+        </div>
         
-        <Card className="border-0 shadow-sm bg-card" style={{ boxShadow: "0 4px 24px rgba(86, 86, 118, 0.04), 0 1px 4px rgba(86, 86, 118, 0.02)" }}>
-          <CardContent className="p-4 sm:p-6 flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-oreo-mauve mb-1">
-              <ArrowDownRight className="w-4 h-4" />
-              <span className="text-xs sm:text-sm font-medium">Expenses</span>
-            </div>
-            <div className="font-mono text-lg sm:text-2xl font-semibold tracking-tight text-foreground truncate">
-              {currencySymbol}{totalExpense.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-end min-w-0 flex-1">
+          <span className="text-[9px] sm:text-xs font-medium uppercase tracking-wider text-oreo-mauve mb-0.5 sm:mb-1 truncate">
+            Expenses
+          </span>
+          <span className="font-mono text-sm sm:text-3xl font-semibold tracking-tight text-foreground truncate">
+            {currencySymbol}{totalExpense.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
+        </div>
       </div>
 
       <div className="mt-8 flex-1">
