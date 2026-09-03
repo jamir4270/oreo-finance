@@ -29,7 +29,6 @@ interface MobileBottomNavProps {
 const MORE_MENU_ITEMS = [
   { name: "Accounts", href: "/accounts", icon: Wallet },
   { name: "Categories", href: "/categories", icon: Tags },
-  { name: "Goals", href: "/goals", icon: Target },
   { name: "Analytics", href: "/analytics", icon: LineChart },
   { name: "Settings", href: "/settings", icon: Settings },
 ];

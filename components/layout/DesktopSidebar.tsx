@@ -26,7 +26,6 @@ const NAV_ITEMS = [
   { name: "Accounts", href: "/accounts", icon: Wallet },
   { name: "Categories", href: "/categories", icon: Tags },
   { name: "Budgets", href: "/budgets", icon: PieChart },
-  { name: "Goals", href: "/goals", icon: Target },
   { name: "Analytics", href: "/analytics", icon: LineChart },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
@@ -52,10 +51,10 @@ export function DesktopSidebar({ onOpenAddTransaction }: DesktopSidebarProps) {
       </div>
 
       {/* Primary Action */}
-      <div className="p-4">
+      <div className="px-4 py-6">
         <Button
           onClick={onOpenAddTransaction}
-          className="w-full justify-start gap-2 shadow-sm"
+          className="w-full justify-center gap-2 shadow-sm py-5 text-base"
         >
           <PlusCircle className="h-4 w-4" />
           Add Transaction
