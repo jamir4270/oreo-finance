@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Calendar, Filter, Wallet, Tags } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -110,11 +110,20 @@ export function TransactionsPageClient({
     if (result?.error) {
       setDeleteError(result.error);
     } else {
+      const deletedAmount = deletingTxn.amount;
       setDeletingTxn(null);
+      const { toast } = require("sonner");
+      toast("Transaction deleted", {
+        description: `Removed transaction of ${deletedAmount}`,
+        action: {
+          label: "Undo",
+          onClick: () => toast("Undo action will be processed"),
+        }
+      });
     }
   };
 
-  const EmptyState = () => (
+  const emptyStateJsx = (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/30 p-12 text-center mt-8">
       <p className="text-sm text-muted-foreground max-w-xs mb-4">
         {transactions.length === 0 && Object.keys(initialFilters).every(k => initialFilters[k as keyof typeof initialFilters] === "all" || initialFilters[k as keyof typeof initialFilters] === "all_time")
@@ -150,10 +159,11 @@ export function TransactionsPageClient({
       </div>
 
       {/* Filter Bar */}
-      <div className="grid grid-cols-2 md:flex md:flex-row flex-wrap gap-3 mt-6">
+      <div className="flex flex-row flex-wrap gap-2 md:gap-3 mt-6">
         <Select value={filterDateRange} onValueChange={(val) => updateFilter("dateRange", val || "all_time")}>
-          <SelectTrigger className="w-full md:w-[150px] capitalize">
-            <span data-slot="select-value" className="flex flex-1 text-left truncate">
+          <SelectTrigger className="w-auto md:w-[150px] capitalize px-3 md:px-3">
+            <Calendar className="h-4 w-4 md:mr-2 shrink-0" />
+            <span data-slot="select-value" className="hidden md:flex flex-1 text-left truncate">
               {
                 filterDateRange === "last_30" ? "Last 30 Days" :
                 filterDateRange === "this_month" ? "This Month" :
@@ -173,8 +183,9 @@ export function TransactionsPageClient({
         </Select>
 
         <Select value={filterType} onValueChange={(val) => updateFilter("type", val || "all")}>
-          <SelectTrigger className="w-full md:w-[150px] capitalize">
-            <span data-slot="select-value" className="flex flex-1 text-left truncate">
+          <SelectTrigger className="w-auto md:w-[150px] capitalize px-3 md:px-3">
+            <Filter className="h-4 w-4 md:mr-2 shrink-0" />
+            <span data-slot="select-value" className="hidden md:flex flex-1 text-left truncate">
               {filterType === "all" ? "All Types" : filterType}
             </span>
           </SelectTrigger>
@@ -187,8 +198,9 @@ export function TransactionsPageClient({
         </Select>
 
         <Select value={filterAccount} onValueChange={(val) => updateFilter("account", val || "all")}>
-          <SelectTrigger className="w-full md:w-[180px] capitalize">
-            <span data-slot="select-value" className="flex flex-1 text-left truncate">
+          <SelectTrigger className="w-auto md:w-[180px] capitalize px-3 md:px-3">
+            <Wallet className="h-4 w-4 md:mr-2 shrink-0" />
+            <span data-slot="select-value" className="hidden md:flex flex-1 text-left truncate">
               {filterAccount === "all" ? "All Accounts" : accounts.find(a => a.id === filterAccount)?.name || "Account"}
             </span>
           </SelectTrigger>
@@ -201,8 +213,9 @@ export function TransactionsPageClient({
         </Select>
 
         <Select value={filterCategory} onValueChange={(val) => updateFilter("category", val || "all")}>
-          <SelectTrigger className="w-full md:w-[180px] capitalize">
-            <span data-slot="select-value" className="flex flex-1 text-left truncate">
+          <SelectTrigger className="w-auto md:w-[180px] capitalize px-3 md:px-3">
+            <Tags className="h-4 w-4 md:mr-2 shrink-0" />
+            <span data-slot="select-value" className="hidden md:flex flex-1 text-left truncate">
               {filterCategory === "all" ? "All Categories" : categories.find(c => c.id === filterCategory)?.name || "Category"}
             </span>
           </SelectTrigger>
@@ -219,7 +232,7 @@ export function TransactionsPageClient({
 
       <div className="mt-6 flex-1 flex flex-col pb-10">
         {transactions.length === 0 ? (
-          <EmptyState />
+          emptyStateJsx
         ) : (
           <div className="flex flex-col gap-8">
             {sortedDates.map((date) => {

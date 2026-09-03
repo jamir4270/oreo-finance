@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { motion } from "motion/react";
 import {
   Card,
   CardContent,
@@ -83,9 +84,12 @@ export function CategoryBreakdownChart({
                     </span>
                   </div>
                   <div className="h-2 w-full overflow-hidden rounded-full bg-muted/60">
-                    <div
-                      className="h-full rounded-full transition-all duration-500 ease-out"
-                      style={{ width: `${pct}%`, backgroundColor: fill }}
+                    <motion.div
+                      className="h-full rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${pct}%` }}
+                      transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                      style={{ backgroundColor: fill }}
                     />
                   </div>
                 </div>

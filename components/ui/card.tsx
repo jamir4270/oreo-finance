@@ -5,14 +5,17 @@ import { cn } from "@/lib/utils"
 function Card({
   className,
   size = "default",
+  accent,
   ...props
-}: React.ComponentProps<"div"> & { size?: "default" | "sm" }) {
+}: React.ComponentProps<"div"> & { size?: "default" | "sm"; accent?: "expense" | "income" | "neutral" }) {
   return (
     <div
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-[var(--radius-xl)] bg-card py-(--card-spacing) text-sm text-card-foreground shadow-oreo-sm transition-all duration-[--duration-sm] ease-[--ease-oreo] hover:-translate-y-[2px] hover:shadow-oreo-md [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        accent === "expense" && "border-t-[3px] border-t-oreo-mauve",
+        accent === "income" && "border-t-[3px] border-t-oreo-dusty-teal",
         className
       )}
       {...props}
