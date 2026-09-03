@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { BudgetCardData } from "./BudgetCard";
+import { toast } from "sonner";
 
 interface EditBudgetDialogProps {
   budget: BudgetCardData;
@@ -60,6 +61,7 @@ export function EditBudgetDialog({
   React.useEffect(() => {
     if (state?.success) {
       onOpenChange(false);
+      toast.success("Budget updated successfully");
     }
   }, [state, onOpenChange]);
 

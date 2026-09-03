@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { IconPicker } from "@/components/ui/icon-picker";
 import { Lock } from "lucide-react";
+import { toast } from "sonner";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -59,6 +60,7 @@ export function EditCategoryDialog({ category, open, onOpenChange }: EditCategor
   React.useEffect(() => {
     if (state?.success) {
       onOpenChange(false);
+      toast.success("Category updated successfully");
     }
   }, [state, onOpenChange]);
 

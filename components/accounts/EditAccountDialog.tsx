@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { IconPicker } from "@/components/ui/icon-picker";
 import { Lock } from "lucide-react";
+import { toast } from "sonner";
 
 const ACCOUNT_TYPES = [
   { value: "cash", label: "Cash" },
@@ -70,6 +71,7 @@ export function EditAccountDialog({ account, open, onOpenChange }: EditAccountDi
   React.useEffect(() => {
     if (state?.success) {
       onOpenChange(false);
+      toast.success("Account updated successfully");
     }
   }, [state, onOpenChange]);
 

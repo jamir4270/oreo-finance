@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { IconPicker } from "@/components/ui/icon-picker";
+import { toast } from "sonner";
 
 const ACCOUNT_TYPES = [
   { value: "cash", label: "Cash" },
@@ -49,6 +50,7 @@ export function CreateAccountDialog({ baseCurrency }: CreateAccountDialogProps) 
   React.useEffect(() => {
     if (state?.success) {
       setOpen(false);
+      toast.success("Account created successfully");
     }
   }, [state]);
 

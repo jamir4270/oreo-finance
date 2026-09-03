@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -37,6 +38,7 @@ export function MobileBottomNav({
   onOpenAddTransaction,
 }: MobileBottomNavProps) {
   const pathname = usePathname();
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t border-border bg-card pb-safe lg:hidden">
@@ -91,7 +93,7 @@ export function MobileBottomNav({
       </Link>
 
       {/* More Menu */}
-      <Sheet>
+      <Sheet open={isMoreOpen} onOpenChange={setIsMoreOpen}>
         <SheetTrigger render={
           <button className="flex flex-col items-center justify-center gap-1 w-16 h-full text-muted-foreground hover:text-foreground">
             <Menu className="h-5 w-5" />
@@ -111,6 +113,7 @@ export function MobileBottomNav({
                 <Link
                   key={item.name}
                   href={item.href}
+                  onClick={() => setIsMoreOpen(false)}
                   className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
                     isActive
                       ? "bg-oreo-periwinkle/15 text-oreo-slate-purple"

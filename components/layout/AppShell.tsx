@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { DesktopSidebar } from "./DesktopSidebar";
 import { MobileBottomNav } from "./MobileBottomNav";
+import { MobileTopBar } from "./MobileTopBar";
 import { TransactionDialog, TxnAccountData, TxnCategoryData } from "../transactions/TransactionDialog";
 
 interface AppShellProps {
@@ -22,7 +23,8 @@ export function AppShell({ children, accounts, categories }: AppShellProps) {
       <DesktopSidebar onOpenAddTransaction={handleOpenAddModal} />
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">
+      <main className="flex flex-1 flex-col overflow-y-auto pb-16 lg:pb-0">
+        <MobileTopBar />
         {children}
       </main>
 

@@ -261,15 +261,15 @@ export function TrendsChart({
                     </span>
                     <div className="flex flex-col gap-0.5 mt-auto min-w-0 w-full">
                       {data?.income ? (
-                        <div className="text-[10px] sm:text-xs font-mono font-medium text-oreo-dusty-teal truncate bg-oreo-dusty-teal/10 px-1 py-0.5 rounded flex items-center gap-1 min-w-0">
+                        <div className="text-[10px] sm:text-xs font-mono font-medium text-oreo-dusty-teal truncate bg-oreo-dusty-teal/10 px-1 py-0.5 rounded flex items-center gap-0.5 sm:gap-1 min-w-0">
                           <span className="opacity-70 shrink-0">+</span>
-                          <span className="truncate">{currencySymbol}{data.income.toLocaleString(undefined, { notation: "compact", maximumFractionDigits: 1 })}</span>
+                          <span className="truncate">{formatCompactCurrency(data.income)}</span>
                         </div>
                       ) : null}
                       {data?.expense ? (
-                        <div className="text-[10px] sm:text-xs font-mono font-medium text-oreo-mauve truncate bg-oreo-mauve/10 px-1 py-0.5 rounded flex items-center gap-1 min-w-0">
+                        <div className="text-[10px] sm:text-xs font-mono font-medium text-oreo-mauve truncate bg-oreo-mauve/10 px-1 py-0.5 rounded flex items-center gap-0.5 sm:gap-1 min-w-0">
                           <span className="opacity-70 shrink-0">-</span>
-                          <span className="truncate">{currencySymbol}{data.expense.toLocaleString(undefined, { notation: "compact", maximumFractionDigits: 1 })}</span>
+                          <span className="truncate">{formatCompactCurrency(data.expense)}</span>
                         </div>
                       ) : null}
                     </div>
@@ -300,4 +300,11 @@ function getCurrencySymbol(currency: string): string {
   } catch {
     return currency;
   }
+}
+
+function formatCompactCurrency(value: number) {
+  if (value >= 1000) {
+    return value.toLocaleString(undefined, { notation: "compact", maximumFractionDigits: 1 });
+  }
+  return value.toLocaleString(undefined, { maximumFractionDigits: 1 });
 }
