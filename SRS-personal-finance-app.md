@@ -166,6 +166,8 @@ Single class: **Authenticated User**. Each user's data (accounts, transactions, 
 
 ### 3.10 Daily Reminder Notification
 
+> **⚠️ HALTED — This feature will not be developed.** The feature relies on client-side scheduled notifications, which cannot reliably wake up a closed progressive web app (PWA) on iOS or Android. Because a push server is out of scope for v1, this feature has been skipped. Requirements are preserved below for historical context.
+
 - FR-10.1: The app sends a local (client-side) daily reminder notification prompting the user to log their transactions.
 - FR-10.2: The reminder time is fully user-configurable and can be changed at any time in settings.
 - FR-10.3: This is implemented via the browser Notification API and a client-side schedule check — no backend/server-triggered push infrastructure is required.

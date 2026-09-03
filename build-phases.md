@@ -348,6 +348,8 @@ Phases are ordered so that each one only depends on work completed in a prior ph
 
 ## Phase 16 — Daily Reminder Notification
 
+> **⚠️ HALTED — This phase will not be developed.** The feature was intended to use purely local/client-side scheduled notifications without a backend push server. However, progressive web apps (PWAs) are aggressively suspended by mobile operating systems (both iOS and Android) when closed or backgrounded. A purely client-side scheduled notification cannot reliably wake up a closed PWA to alert the user at a specific time. Because a push server is out of scope for v1, this feature is skipped.
+
 **Goal:** Users get a local, user-configurable daily reminder to log their transactions.
 
 **Prerequisites:** Phase 15 complete (requires the service worker/PWA foundation).
