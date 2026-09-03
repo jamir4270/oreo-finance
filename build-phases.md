@@ -366,6 +366,8 @@ Phases are ordered so that each one only depends on work completed in a prior ph
 
 ## Phase 17 — Offline Support & Sync (Fast-Follow)
 
+> **⚠️ HALTED / ROLLED BACK — This phase will not be developed.** Attempting to bolt a massive offline-first architecture (Dexie, full background sync, Client Components) onto an app that was fundamentally built as online-first (Next.js Server Components, Server Actions, direct Supabase queries) is an architectural mismatch. It causes major friction with routing and adds massive complexity for a feature that is out of scope for the current architecture. The app will remain strictly online-first.
+
 **Goal:** Users can log transactions with no internet connection, and have them sync automatically once back online.
 
 **Prerequisites:** Phase 9 complete. This phase is explicitly a fast-follow — it's fine (and expected) for it to start well after MVP features are live, per the SRS.
