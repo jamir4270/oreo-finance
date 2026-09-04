@@ -8,7 +8,7 @@ import { ArrowRight, PieChart, Shield, Smartphone, Heart, PawPrint } from "lucid
 import { motion, useScroll, useTransform, useSpring, useReducedMotion } from "motion/react";
 import confetti from "canvas-confetti";
 
-export function LandingPageClient({ user }: { user: any }) {
+export function LandingPageClient({ isLoggedIn }: { isLoggedIn: boolean }) {
   const prefersReducedMotion = useReducedMotion();
   const [isTouch, setIsTouch] = useState(true); 
   const [mounted, setMounted] = useState(false);
@@ -113,7 +113,7 @@ export function LandingPageClient({ user }: { user: any }) {
           </span>
         </div>
         <nav>
-          {user ? (
+          {isLoggedIn ? (
             <Link href="/dashboard" className={showCustomCursor ? "cursor-none" : ""}>
               <Button className={`gap-2 shadow-oreo-sm hover:-translate-y-0.5 hover:shadow-oreo-md transition-all ${showCustomCursor ? "cursor-none" : ""}`}>
                 Dashboard <ArrowRight className="h-4 w-4" />
@@ -163,7 +163,7 @@ export function LandingPageClient({ user }: { user: any }) {
               Track your income, expenses, and transfers across multiple accounts and currencies. Meet Oreo, your playful companion to financial clarity.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 justify-center md:justify-start">
-              {user ? (
+              {isLoggedIn ? (
                 <Link href="/dashboard" className={showCustomCursor ? "cursor-none" : ""}>
                   <Button size="lg" className={`h-14 px-8 text-lg font-medium shadow-oreo-sm hover:-translate-y-0.5 hover:shadow-oreo-md transition-all duration-300 w-full sm:w-auto ${showCustomCursor ? "cursor-none" : ""}`}>
                     Go to Dashboard
@@ -306,13 +306,15 @@ export function LandingPageClient({ user }: { user: any }) {
             style={{ imageRendering: "pixelated" }}
           />
           <h2 className="font-heading text-4xl font-bold text-oreo-slate-purple">Ready to meet Oreo?</h2>
-          <Button 
-            size="lg" 
-            onClick={handleConfetti}
-            className={`h-14 px-10 text-lg font-medium shadow-oreo-sm hover:-translate-y-0.5 hover:shadow-oreo-md transition-all ${showCustomCursor ? "cursor-none" : ""}`}
-          >
-            Start Tracking Free
-          </Button>
+          <Link href={isLoggedIn ? "/dashboard" : "/login"} className={showCustomCursor ? "cursor-none" : ""}>
+            <Button 
+              size="lg" 
+              onClick={handleConfetti}
+              className={`h-14 px-10 text-lg font-medium shadow-oreo-sm hover:-translate-y-0.5 hover:shadow-oreo-md transition-all ${showCustomCursor ? "cursor-none" : ""}`}
+            >
+              {isLoggedIn ? "Go to Dashboard" : "Start Tracking Free"}
+            </Button>
+          </Link>
         </section>
       </main>
 

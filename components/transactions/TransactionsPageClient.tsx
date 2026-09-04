@@ -6,6 +6,7 @@ import { TransactionData, TxnAccountData, TxnCategoryData, TransactionDialog } f
 import { TransactionDetailDialog } from "./TransactionDetailDialog";
 import { TransactionCard } from "./TransactionCard";
 import { deleteTransaction } from "@/app/actions/transactions";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,6 +60,7 @@ export function TransactionsPageClient({
   const [deleteError, setDeleteError] = React.useState<string | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [isCreateOpen, setIsCreateOpen] = React.useState(false);
+  const [isPending, startTransition] = React.useTransition();
 
   const filterType = initialFilters.type;
   const filterAccount = initialFilters.account;
@@ -74,14 +76,18 @@ export function TransactionsPageClient({
     }
     // Reset to page 1 on filter change
     params.set("page", "1");
-    router.push(`${pathname}?${params.toString()}`);
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`);
+    });
   };
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return;
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", newPage.toString());
-    router.push(`${pathname}?${params.toString()}`);
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`);
+    });
   };
 
   // Group filtered transactions by date
@@ -109,13 +115,11 @@ export function TransactionsPageClient({
     
     if (result?.error) {
       setDeleteError(result.error);
-      const { toast } = require("sonner");
       toast.error(result.error);
     } else {
       const deletedAmount = deletingTxn.amount;
       setDeletingTxn(null);
-      const { toast } = require("sonner");
-      toast("Transaction deleted", {
+      toast.success("Transaction deleted", {
         description: `Removed transaction of ${deletedAmount}`,
         action: {
           label: "Undo",
@@ -232,7 +236,7 @@ export function TransactionsPageClient({
         </Select>
       </div>
 
-      <div className="mt-6 flex-1 flex flex-col pb-10">
+      <div className={`mt-6 flex-1 flex flex-col pb-10 transition-opacity duration-200 ${isPending ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
         {transactions.length === 0 ? (
           emptyStateJsx
         ) : (

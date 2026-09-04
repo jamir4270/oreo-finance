@@ -4,6 +4,7 @@ import * as React from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { createTransaction, updateTransaction } from "@/app/actions/transactions";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -80,10 +81,12 @@ export function TransactionDialog({
   const actionWithId = transaction ? updateTransaction.bind(null, transaction.id) : createTransaction;
   const [state, formAction] = useActionState(actionWithId, null);
 
+  const lastFiredStateRef = React.useRef(state);
+
   React.useEffect(() => {
-    if (state?.success) {
+    if (state?.success && state !== lastFiredStateRef.current) {
+      lastFiredStateRef.current = state;
       setOpen(false);
-      const { toast } = require("sonner");
       toast.success(isEdit ? "Transaction updated" : "Transaction added", {
         description: `${amountStr} ${type}`,
         action: {
