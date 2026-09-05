@@ -5,6 +5,9 @@ import { Mascot } from "@/components/ui/mascot";
 import * as LucideIcons from "lucide-react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { getExchangeRates } from "@/lib/exchange-rates";
+import { convertCurrency, getCurrencySymbol } from "@/lib/currency";
+import { StaleRateBanner } from "@/components/ui/stale-rate-banner";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -20,11 +23,9 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .single();
 
-  const currencySymbol = profile?.base_currency === "USD" ? "$" : 
-                         profile?.base_currency === "EUR" ? "€" :
-                         profile?.base_currency === "GBP" ? "£" :
-                         profile?.base_currency === "PHP" ? "₱" :
-                         profile?.base_currency;
+  const baseCurrency = profile?.base_currency || "USD";
+  const currencySymbol = getCurrencySymbol(baseCurrency);
+  const { rates, isStale } = await getExchangeRates();
 
   const { data: rawAccounts } = await supabase
     .from("accounts")
@@ -52,8 +53,11 @@ export default async function DashboardPage() {
     return { ...account, balance };
   });
 
-  const activeAccounts = (allAccounts || []).filter(a => !a.archived_at);
-  const accounts = [...activeAccounts].sort((a, b) => b.balance - a.balance).slice(0, 3);
+  const activeAccounts = (allAccounts || []).filter(a => !a.archived_at).map(a => ({
+    ...a,
+    convertedBalance: convertCurrency(a.balance, a.currency, baseCurrency, rates)
+  }));
+  const accounts = [...activeAccounts].sort((a, b) => b.convertedBalance - a.convertedBalance).slice(0, 3);
 
   const { data: transactions } = await supabase
     .from("transactions")
@@ -65,10 +69,12 @@ export default async function DashboardPage() {
     .order("txn_date", { ascending: false })
     .limit(5);
 
-  const totalBalance = activeAccounts.reduce((sum, acc) => sum + acc.balance, 0);
+  const totalBalance = activeAccounts.reduce((sum, acc) => sum + acc.convertedBalance, 0);
 
   return (
     <div className="flex flex-col gap-8 p-6 md:p-10 max-w-5xl mx-auto w-full">
+      <StaleRateBanner isStale={isStale} />
+      
       {/* Header & Balance */}
       <div className="flex flex-col items-center text-center gap-2 mt-4 md:mt-8">
         <span className="text-sm font-medium uppercase tracking-wider text-muted-foreground">

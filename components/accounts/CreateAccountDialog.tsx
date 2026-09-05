@@ -24,9 +24,7 @@ const ACCOUNT_TYPES = [
   { value: "custom", label: "Custom" },
 ];
 
-const CURRENCIES = [
-  "USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "INR", "PHP"
-];
+import { CURRENCIES } from "@/lib/currency";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -101,8 +99,8 @@ export function CreateAccountDialog({ baseCurrency }: CreateAccountDialogProps) 
               defaultValue={baseCurrency || "USD"}
             >
               {CURRENCIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
+                <option key={c.code} value={c.code}>
+                  {c.code} - {c.name}
                 </option>
               ))}
             </select>

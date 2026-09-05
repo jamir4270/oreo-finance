@@ -73,11 +73,15 @@ export default async function AccountsPage() {
     };
   });
 
+  const { getExchangeRates } = await import("@/lib/exchange-rates");
+  const { rates } = await getExchangeRates();
+
   return (
     <div className="flex flex-1 flex-col p-6 md:p-10 max-w-5xl mx-auto w-full">
       <AccountsPageClient 
         accounts={accounts} 
         baseCurrency={profile?.base_currency || "USD"} 
+        rates={rates}
       />
     </div>
   );

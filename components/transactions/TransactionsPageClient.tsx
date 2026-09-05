@@ -31,6 +31,7 @@ interface TransactionsPageClientProps {
   accounts: TxnAccountData[];
   categories: TxnCategoryData[];
   exchangeRates?: Record<string, number>;
+  isStale?: boolean;
   totalPages: number;
   currentPage: number;
   initialFilters: {
@@ -46,6 +47,7 @@ export function TransactionsPageClient({
   accounts, 
   categories, 
   exchangeRates,
+  isStale,
   totalPages,
   currentPage,
   initialFilters
@@ -120,11 +122,7 @@ export function TransactionsPageClient({
       const deletedAmount = deletingTxn.amount;
       setDeletingTxn(null);
       toast.success("Transaction deleted", {
-        description: `Removed transaction of ${deletedAmount}`,
-        action: {
-          label: "Undo",
-          onClick: () => toast("Undo action will be processed"),
-        }
+        description: `Removed transaction of ${deletedAmount}`
       });
     }
   };
@@ -158,6 +156,7 @@ export function TransactionsPageClient({
           accounts={accounts}
           categories={categories}
           exchangeRates={exchangeRates}
+          isStale={isStale}
           open={isCreateOpen}
           onOpenChange={setIsCreateOpen}
           trigger={<Button><Plus className="mr-2 h-4 w-4" /> Add Transaction</Button>}
@@ -319,6 +318,7 @@ export function TransactionsPageClient({
         accounts={accounts}
         categories={categories}
         exchangeRates={exchangeRates}
+        isStale={isStale}
         open={!!editingTxn}
         onOpenChange={(open) => {
           if (!open) setEditingTxn(null);

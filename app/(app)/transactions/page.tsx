@@ -90,15 +90,18 @@ export default async function TransactionsPage(props: { searchParams: SearchPara
     .order("name");
 
   // Fetch exchange rates
-  const { rates } = await getExchangeRates();
+  const { rates, isStale } = await getExchangeRates();
+  const { StaleRateBanner } = await import("@/components/ui/stale-rate-banner");
 
   return (
     <div className="flex flex-1 flex-col p-6 md:p-10 max-w-5xl mx-auto w-full">
+      <StaleRateBanner isStale={isStale} />
       <TransactionsPageClient 
         transactions={transactions || []} 
         accounts={accounts || []}
         categories={categories || []}
         exchangeRates={rates}
+        isStale={isStale}
         totalPages={totalPages}
         currentPage={page}
         initialFilters={{

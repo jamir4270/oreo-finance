@@ -17,14 +17,11 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/dashboard";
 
-  console.log("[Auth Callback] Received searchParams:", Object.fromEntries(searchParams.entries()));
-
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      console.log("[Auth Callback] Successfully exchanged code for session. Redirecting to:", next);
       // For password reset flows, redirect to the update-password page
       // For normal sign-in/confirmation, redirect to dashboard (or onboarding)
       const forwardedHost = request.headers.get("x-forwarded-host");
@@ -40,11 +37,8 @@ export async function GET(request: Request) {
     } else {
       console.error("[Auth Callback] Error exchanging code for session:", error);
     }
-  } else {
-    console.warn("[Auth Callback] No code found in URL.");
   }
 
   // If code exchange fails or no code provided, redirect to an error page
-  console.log("[Auth Callback] Redirecting to login with error.");
   return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`);
 }
