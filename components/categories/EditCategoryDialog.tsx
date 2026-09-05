@@ -75,7 +75,7 @@ export function EditCategoryDialog({ category, open, onOpenChange }: EditCategor
             Update the details of your category.
           </DialogDescription>
         </DialogHeader>
-        <form action={formAction} className="flex flex-col gap-4 mt-4">
+        <form key={category.id} action={formAction} className="flex flex-col gap-4 mt-4">
           <input type="hidden" name="icon" value={icon} />
 
           <div className="flex flex-col gap-2">

@@ -51,6 +51,15 @@ export async function createBudget(
     return { error: "A budget already exists for this category. Edit or delete the existing one first." };
   }
 
+  // Fetch user's base currency to pin budget to
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("base_currency")
+    .eq("id", userData.user.id)
+    .single();
+
+  const budgetCurrency = profile?.base_currency || "PHP";
+
   // Insert budget
   const { data: budget, error: budgetError } = await supabase
     .from("budgets")
@@ -61,6 +70,7 @@ export async function createBudget(
       period_type,
       start_date,
       end_date: period_type === "custom" ? end_date : null,
+      currency: budgetCurrency,
     })
     .select()
     .single();

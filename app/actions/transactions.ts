@@ -8,6 +8,7 @@ import { convertCurrency } from "@/lib/currency";
 export type TransactionActionState = {
   error?: string;
   success?: string;
+  warning?: string;
 } | null;
 
 export async function createTransaction(
@@ -104,7 +105,60 @@ export async function createTransaction(
     revalidatePath("/analytics");
     revalidatePath("/budgets");
   }
-  return { success: "Transaction logged successfully." };
+
+  // Non-blocking overdraft warning for expenses
+  let warning: string | undefined;
+  if (type === "expense") {
+    try {
+      // Compute the account balance after this transaction
+      const { data: account } = await supabase
+        .from("accounts")
+        .select("name")
+        .eq("id", account_id)
+        .single();
+
+      // Sum all transactions for this account to get current balance
+      const { data: incomeTxns } = await supabase
+        .from("transactions")
+        .select("amount")
+        .eq("account_id", account_id)
+        .eq("type", "income");
+
+      const { data: expenseTxns } = await supabase
+        .from("transactions")
+        .select("amount")
+        .eq("account_id", account_id)
+        .eq("type", "expense");
+
+      const { data: transfersOut } = await supabase
+        .from("transactions")
+        .select("amount")
+        .eq("account_id", account_id)
+        .eq("type", "transfer");
+
+      const { data: transfersIn } = await supabase
+        .from("transactions")
+        .select("to_amount")
+        .eq("to_account_id", account_id)
+        .eq("type", "transfer");
+
+      const totalIncome = (incomeTxns || []).reduce((s, t) => s + Number(t.amount), 0);
+      const totalExpense = (expenseTxns || []).reduce((s, t) => s + Number(t.amount), 0);
+      const totalTransferOut = (transfersOut || []).reduce((s, t) => s + Number(t.amount), 0);
+      const totalTransferIn = (transfersIn || []).reduce((s, t) => s + Number(t.to_amount || 0), 0);
+
+      const balance = totalIncome - totalExpense - totalTransferOut + totalTransferIn;
+
+      if (balance < 0) {
+        const accountName = account?.name || "account";
+        warning = `This expense brought your ${accountName} balance below zero.`;
+      }
+    } catch {
+      // Silently ignore — overdraft check is best-effort
+    }
+  }
+
+  return { success: "Transaction logged successfully.", warning };
 }
 
 export async function updateTransaction(

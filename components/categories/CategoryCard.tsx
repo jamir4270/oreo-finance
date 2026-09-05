@@ -23,23 +23,23 @@ export function CategoryCard({ category, onEdit, onDelete }: CategoryCardProps) 
   const Icon = category.icon ? (LucideIcons as any)[category.icon] : LucideIcons.Tag;
 
   return (
-    <div className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:shadow-md">
-      <div className="flex items-center gap-3">
+    <div className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:shadow-md overflow-hidden">
+      <div className="flex items-center gap-3 min-w-0">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-oreo-lavender/50 text-oreo-slate-purple">
           {Icon && <Icon className="h-5 w-5" />}
         </div>
-        <div className="flex flex-col">
+        <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-heading text-base font-medium text-foreground">
+            <h3 className="font-heading text-base font-medium text-foreground truncate">
               {category.name}
             </h3>
             {category.is_default && (
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider shrink-0">
                 Default
               </span>
             )}
           </div>
-          <p className="text-xs text-muted-foreground capitalize">
+          <p className="text-xs text-muted-foreground capitalize truncate">
             {category.txn_type}
           </p>
         </div>

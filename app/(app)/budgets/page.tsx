@@ -89,6 +89,7 @@ export default async function BudgetsPage() {
         period_type: budget.period_type,
         start_date: budget.start_date,
         end_date: budget.end_date,
+        currency: budget.currency || baseCurrency,
         category: budget.category,
         currentPeriod,
         computedSpent,
