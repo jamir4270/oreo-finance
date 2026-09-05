@@ -40,44 +40,47 @@ export default async function BudgetsPage() {
     .order("name");
 
   // Fetch exchange rates
-  const { rates } = await getExchangeRates();
+  const { rates, isStale } = await getExchangeRates();
+  const { StaleRateBanner } = await import("@/components/ui/stale-rate-banner");
+  const { ensureCurrentPeriods, computeActualSpentBatched } = await import("@/lib/budget-periods");
 
-  // For each budget, ensure current period exists and compute actual spent
   const enrichedBudgets: BudgetCardData[] = [];
 
-  if (budgets) {
-    for (const budget of budgets) {
-      const currentPeriod = await ensureCurrentPeriod(
-        supabase,
-        {
-          id: budget.id,
-          period_type: budget.period_type,
-          start_date: budget.start_date,
-          end_date: budget.end_date,
-          limit_amount: budget.limit_amount,
-        },
-        userData.user.id
-      );
+  if (budgets && budgets.length > 0) {
+    const currentPeriods = await ensureCurrentPeriods(supabase, budgets, userData.user.id);
 
-      let computedSpent = 0;
-      if (currentPeriod) {
-        computedSpent = await computeActualSpent(
-          supabase,
-          userData.user.id,
-          budget.category_id,
-          currentPeriod.period_start,
-          currentPeriod.period_end,
-          baseCurrency,
-          rates
-        );
+    const categoryPeriods = currentPeriods.map((cp, idx) => {
+      if (!cp) return null;
+      return {
+        categoryId: budgets[idx].category_id,
+        periodStart: cp.period_start,
+        periodEnd: cp.period_end,
+        periodId: cp.id,
+      };
+    }).filter(Boolean) as any[];
 
-        // Also update the actual_spent snapshot on the period row (background, non-blocking)
-        supabase
-          .from("budget_periods")
-          .update({ actual_spent: computedSpent })
-          .eq("id", currentPeriod.id)
-          .then(() => {});
-      }
+    const spentMap = await computeActualSpentBatched(
+      supabase,
+      userData.user.id,
+      categoryPeriods,
+      baseCurrency,
+      rates
+    );
+
+    // Update the actual_spent snapshot on the period rows in background
+    for (const cp of categoryPeriods) {
+      const computedSpent = spentMap.get(cp.categoryId) || 0;
+      supabase
+        .from("budget_periods")
+        .update({ actual_spent: computedSpent })
+        .eq("id", cp.periodId)
+        .then(() => {});
+    }
+
+    for (let i = 0; i < budgets.length; i++) {
+      const budget = budgets[i];
+      const currentPeriod = currentPeriods[i];
+      const computedSpent = currentPeriod ? (spentMap.get(budget.category_id) || 0) : 0;
 
       enrichedBudgets.push({
         id: budget.id,
@@ -95,6 +98,7 @@ export default async function BudgetsPage() {
 
   return (
     <div className="flex flex-1 flex-col p-6 md:p-10 max-w-5xl mx-auto w-full">
+      <StaleRateBanner isStale={isStale} />
       <BudgetsPageClient
         budgets={enrichedBudgets}
         categories={categories || []}

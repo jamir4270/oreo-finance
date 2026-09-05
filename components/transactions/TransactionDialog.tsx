@@ -43,6 +43,7 @@ interface TransactionDialogProps {
   accounts: TxnAccountData[];
   categories: TxnCategoryData[];
   exchangeRates?: Record<string, number>;
+  isStale?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   trigger?: React.ReactElement;
@@ -62,6 +63,7 @@ export function TransactionDialog({
   accounts,
   categories,
   exchangeRates,
+  isStale,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
   trigger,
@@ -88,11 +90,7 @@ export function TransactionDialog({
       lastFiredStateRef.current = state;
       setOpen(false);
       toast.success(isEdit ? "Transaction updated" : "Transaction added", {
-        description: `${amountStr} ${type}`,
-        action: {
-          label: "Undo",
-          onClick: () => toast("Undo action will be processed"),
-        }
+        description: `${amountStr} ${type}`
       });
     }
   }, [state, setOpen, isEdit, amountStr, type]);
@@ -259,6 +257,9 @@ export function TransactionDialog({
             <div className="flex flex-col gap-1 rounded-md bg-muted p-3 text-sm">
               <div className="font-medium text-foreground">Converted Amount: {convertedAmountStr}</div>
               <div className="text-muted-foreground text-xs">{exchangeRateStr}</div>
+              {isStale && (
+                <div className="text-amber-600 text-xs mt-1">Rate may be up to a day old</div>
+              )}
             </div>
           )}
 

@@ -32,7 +32,6 @@ export const metadata: Metadata = {
   title: "Oreo — Personal Finance Tracker",
   description:
     "Track income, expenses, and transfers across multiple accounts and currencies. A cozy, playful finance companion named after a beloved cat.",
-  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -61,7 +60,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 
         <FakeSplash />
         {children}
-        <Toaster position="bottom-center" richColors />
+        <Toaster position="top-right" richColors />
         <PwaRegistration />
       </body>
     </html>

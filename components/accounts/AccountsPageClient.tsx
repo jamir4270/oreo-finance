@@ -7,34 +7,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CreateAccountDialog } from "./CreateAccountDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowDownRight, ArrowUpRight, Wallet } from "lucide-react";
+import { AnimatedCounter } from "@/components/ui/animated-counter";
+import { convertCurrency, getCurrencySymbol } from "@/lib/currency";
 
 interface AccountsPageClientProps {
   accounts: (AccountData & { archived_at: string | null; income?: number; expense?: number })[];
   baseCurrency: string;
+  rates: Record<string, number>;
 }
 
-export function AccountsPageClient({ accounts, baseCurrency }: AccountsPageClientProps) {
+export function AccountsPageClient({ accounts, baseCurrency, rates }: AccountsPageClientProps) {
   const [editingAccount, setEditingAccount] = React.useState<AccountData | null>(null);
 
   const activeAccounts = accounts.filter(a => !a.archived_at);
   const archivedAccounts = accounts.filter(a => a.archived_at);
 
-  const totalBalance = activeAccounts.reduce((sum, acc) => sum + acc.balance, 0);
-  const totalIncome = activeAccounts.reduce((sum, acc) => sum + (acc.income || 0), 0);
-  const totalExpense = activeAccounts.reduce((sum, acc) => sum + (acc.expense || 0), 0);
+  const totalBalance = activeAccounts.reduce((sum, acc) => sum + convertCurrency(acc.balance, acc.currency, baseCurrency, rates), 0);
+  const totalIncome = activeAccounts.reduce((sum, acc) => sum + convertCurrency(acc.income || 0, acc.currency, baseCurrency, rates), 0);
+  const totalExpense = activeAccounts.reduce((sum, acc) => sum + convertCurrency(acc.expense || 0, acc.currency, baseCurrency, rates), 0);
 
-  const currencySymbol = React.useMemo(() => {
-    try {
-      const parts = new Intl.NumberFormat(undefined, {
-        style: "currency",
-        currency: baseCurrency,
-        currencyDisplay: "narrowSymbol",
-      }).formatToParts(0);
-      return parts.find((p) => p.type === "currency")?.value || baseCurrency;
-    } catch {
-      return baseCurrency;
-    }
-  }, [baseCurrency]);
+  const currencySymbol = getCurrencySymbol(baseCurrency);
 
   return (
     <>
@@ -56,7 +48,7 @@ export function AccountsPageClient({ accounts, baseCurrency }: AccountsPageClien
             Total Balance
           </span>
           <span className="font-mono text-base sm:text-3xl font-semibold tracking-tight text-foreground truncate">
-            {currencySymbol}{totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <AnimatedCounter value={totalBalance} prefix={currencySymbol} />
           </span>
         </div>
         
@@ -65,7 +57,7 @@ export function AccountsPageClient({ accounts, baseCurrency }: AccountsPageClien
             Income
           </span>
           <span className="font-mono text-sm sm:text-3xl font-semibold tracking-tight text-foreground truncate">
-            {currencySymbol}{totalIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <AnimatedCounter value={totalIncome} prefix={currencySymbol} />
           </span>
         </div>
         
@@ -74,7 +66,7 @@ export function AccountsPageClient({ accounts, baseCurrency }: AccountsPageClien
             Expenses
           </span>
           <span className="font-mono text-sm sm:text-3xl font-semibold tracking-tight text-foreground truncate">
-            {currencySymbol}{totalExpense.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <AnimatedCounter value={totalExpense} prefix={currencySymbol} />
           </span>
         </div>
       </div>
