@@ -38,6 +38,7 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -124,6 +125,7 @@
 
   /* Destructive — muted mauve (§2: expense amounts, over-budget, destructive) */
   --destructive: #a76571;
+  --destructive-foreground: #ffffff;
 
   /* Borders — soft lavender-tinted */
   --border: #c3c7ef;

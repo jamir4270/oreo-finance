@@ -64,6 +64,11 @@ export function TransactionDetailDialog({
             </h2>
             <div className={cn("font-mono text-3xl font-bold max-w-full truncate px-4 text-center", amountColor)}>
               {prefix}{transaction.amount.toFixed(2)}
+              {transaction.account?.currency && (
+                <span className="ml-1.5 text-base font-medium text-muted-foreground font-sans">
+                  {transaction.account.currency}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -75,7 +80,12 @@ export function TransactionDetailDialog({
               <span className="text-sm font-medium text-foreground">
                 {isTransfer ? "Source Account" : "Account"}
               </span>
-              <span className="text-sm text-muted-foreground truncate">{transaction.account?.name || "Unknown Account"}</span>
+              <span className="text-sm text-muted-foreground truncate">
+                {transaction.account?.name || "Unknown Account"}
+                {transaction.account?.currency && (
+                  <span className="ml-1 font-mono text-xs opacity-70">{transaction.account.currency}</span>
+                )}
+              </span>
             </div>
           </div>
 
@@ -84,7 +94,12 @@ export function TransactionDetailDialog({
               <Wallet className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
               <div className="flex flex-col min-w-0 flex-1">
                 <span className="text-sm font-medium text-foreground">Destination Account</span>
-                <span className="text-sm text-muted-foreground truncate">{transaction.to_account.name}</span>
+                <span className="text-sm text-muted-foreground truncate">
+                  {transaction.to_account.name}
+                  {transaction.to_account?.currency && (
+                    <span className="ml-1 font-mono text-xs opacity-70">{transaction.to_account.currency}</span>
+                  )}
+                </span>
               </div>
             </div>
           )}

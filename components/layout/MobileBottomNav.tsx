@@ -14,6 +14,7 @@ import {
   Target,
   LineChart,
   Settings,
+  LogOut,
 } from "lucide-react";
 import {
   Sheet,
@@ -22,6 +23,13 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { logout } from "@/app/actions/auth";
 
 interface MobileBottomNavProps {
   onOpenAddTransaction: () => void;
@@ -130,6 +138,31 @@ export function MobileBottomNav({
               );
             })}
           </nav>
+
+          {/* Sign Out */}
+          <div className="mt-4 pt-4 border-t border-border">
+            <Popover>
+              <PopoverTrigger className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50">
+                <LogOut className="h-5 w-5" />
+                Sign Out
+              </PopoverTrigger>
+              <PopoverContent align="start" side="top" className="w-[200px] p-4">
+                <div className="flex flex-col gap-3 text-center">
+                  <span className="text-sm font-medium">Are you sure?</span>
+                  <form action={logout}>
+                    <Button
+                      type="submit"
+                      variant="destructive"
+                      size="sm"
+                      className="w-full"
+                    >
+                      Sign Out
+                    </Button>
+                  </form>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
         </SheetContent>
       </Sheet>
     </div>

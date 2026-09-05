@@ -63,7 +63,8 @@ export default async function DashboardPage() {
     .from("transactions")
     .select(`
       *,
-      category:categories(name, icon)
+      category:categories(name, icon),
+      account:accounts!transactions_account_id_fkey(currency)
     `)
     .eq("user_id", user.id)
     .order("txn_date", { ascending: false })
@@ -151,8 +152,12 @@ export default async function DashboardPage() {
             <CardContent className="flex flex-col gap-3">
               {transactions?.length ? transactions.map((txn) => {
                 const isExpense = txn.type === "expense";
+                const isTransfer = txn.type === "transfer";
                 const catIcon = txn.category?.icon || "Tag";
                 const Icon = (LucideIcons as any)[catIcon] || LucideIcons.Tag;
+                const txnCurrency = (txn as any).account?.currency || baseCurrency;
+                const convertedAmount = convertCurrency(Number(txn.amount), txnCurrency, baseCurrency, rates);
+                const prefix = isTransfer ? "" : isExpense ? "-" : "+";
                 return (
                   <div key={txn.id} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
                     <div className="flex items-center gap-3">
@@ -164,9 +169,16 @@ export default async function DashboardPage() {
                         <span className="text-[10px] text-muted-foreground">{new Date(txn.txn_date).toLocaleDateString()}</span>
                       </div>
                     </div>
-                    <span className={`font-mono text-sm font-semibold ${isExpense ? "text-oreo-mauve" : "text-oreo-dusty-teal"}`}>
-                      {isExpense ? "-" : "+"}{currencySymbol}{txn.amount.toFixed(2)}
-                    </span>
+                    <div className="flex flex-col items-end">
+                      <span className={`font-mono text-sm font-semibold ${isExpense ? "text-oreo-mauve" : isTransfer ? "text-foreground" : "text-oreo-dusty-teal"}`}>
+                        {prefix}{currencySymbol}{convertedAmount.toFixed(2)}
+                      </span>
+                      {txnCurrency !== baseCurrency && (
+                        <span className="text-[10px] text-muted-foreground font-mono">
+                          {prefix}{txnCurrency} {Number(txn.amount).toFixed(2)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 );
               }) : (

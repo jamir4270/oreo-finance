@@ -12,6 +12,7 @@ export interface BudgetCardData {
   period_type: string;
   start_date: string;
   end_date: string | null;
+  currency: string;
   category: { name: string; icon: string; txn_type: string } | null;
   currentPeriod: {
     id: string;
@@ -67,7 +68,14 @@ export function BudgetCard({ budget, baseCurrency, onClick }: BudgetCardProps) {
             <h3 className="font-heading text-base font-medium text-foreground">
               {budget.category?.name || "Uncategorized"}
             </h3>
-            <span className="text-xs text-muted-foreground">{periodLabel}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground">{periodLabel}</span>
+              {budget.currency !== baseCurrency && (
+                <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground">
+                  {budget.currency}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
