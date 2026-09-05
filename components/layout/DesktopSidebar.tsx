@@ -55,9 +55,9 @@ export function DesktopSidebar({ onOpenAddTransaction }: DesktopSidebarProps) {
       <div className="px-4 py-6">
         <Button
           onClick={onOpenAddTransaction}
-          className="w-full justify-center gap-2 shadow-sm py-5 text-base"
+          className="w-full justify-center gap-3 shadow-sm py-5 text-base"
         >
-          <PlusCircle className="h-4 w-4" />
+          <PlusCircle className="h-5 w-5" />
           Add Transaction
         </Button>
       </div>
