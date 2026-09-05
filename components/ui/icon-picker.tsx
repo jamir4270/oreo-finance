@@ -87,7 +87,8 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
                       className={cn(
                         "relative flex aspect-square items-center justify-center cursor-pointer rounded-md border border-transparent px-0 py-0 transition-all duration-[--duration-sm] ease-[--ease-oreo]",
                         "hover:-translate-y-[1px] hover:shadow-oreo-sm hover:border-border hover:bg-muted/50",
-                        value === iconName && "border-oreo-periwinkle bg-oreo-periwinkle"
+                        value === iconName && "border-oreo-periwinkle bg-oreo-periwinkle",
+                        "[&>svg:last-child]:hidden"
                       )}
                     >
                       <Icon className={cn("h-6 w-6", value === iconName ? "text-primary-foreground" : "text-foreground")} />
