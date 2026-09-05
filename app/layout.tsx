@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fredoka, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { PwaRegistration } from "@/components/PwaRegistration";
+import { Analytics } from "@vercel/analytics/next"
 
 /**
  * Typography (Design Spec §3):
@@ -57,7 +58,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${fredoka.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-
+        <Analytics />
         <FakeSplash />
         {children}
         <Toaster position="top-right" richColors />
