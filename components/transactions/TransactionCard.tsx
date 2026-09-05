@@ -68,6 +68,11 @@ export function TransactionCard({ transaction, onClick }: TransactionCardProps) 
         {/* Amount */}
         <div className={cn("font-mono text-base font-semibold", amountColor)}>
           {prefix}{transaction.amount.toFixed(2)}
+          {transaction.account?.currency && (
+            <span className="ml-1 text-xs font-medium text-muted-foreground font-sans">
+              {transaction.account.currency}
+            </span>
+          )}
         </div>
       </div>
     </div>
