@@ -28,6 +28,8 @@ export async function signup(
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
+  const terms = formData.get("terms") as string;
+  const turnstileResponse = formData.get("cf-turnstile-response") as string;
 
   // --- Validation ---
   if (!email || !password) {
@@ -40,6 +42,37 @@ export async function signup(
 
   if (password !== confirmPassword) {
     return { error: "Passwords do not match." };
+  }
+
+  if (terms !== "on") {
+    return { error: "You must agree to the Terms & Conditions." };
+  }
+
+  if (!turnstileResponse) {
+    return { error: "Please complete the security check." };
+  }
+
+  // --- CAPTCHA Verification ---
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  if (secret) {
+    try {
+      const res = await fetch(
+        "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+        {
+          method: "POST",
+          body: `secret=${encodeURIComponent(
+            secret
+          )}&response=${encodeURIComponent(turnstileResponse)}`,
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        }
+      );
+      const outcome = await res.json();
+      if (!outcome.success) {
+        return { error: "Security check failed. Please try again." };
+      }
+    } catch (err) {
+      return { error: "Could not verify security check." };
+    }
   }
 
   // --- Supabase Auth ---
@@ -73,9 +106,37 @@ export async function login(
 
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const turnstileResponse = formData.get("cf-turnstile-response") as string;
 
   if (!email || !password) {
     return { error: "Email and password are required." };
+  }
+
+  if (!turnstileResponse) {
+    return { error: "Please complete the security check." };
+  }
+
+  // --- CAPTCHA Verification ---
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  if (secret) {
+    try {
+      const res = await fetch(
+        "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+        {
+          method: "POST",
+          body: `secret=${encodeURIComponent(
+            secret
+          )}&response=${encodeURIComponent(turnstileResponse)}`,
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        }
+      );
+      const outcome = await res.json();
+      if (!outcome.success) {
+        return { error: "Security check failed. Please try again." };
+      }
+    } catch (err) {
+      return { error: "Could not verify security check." };
+    }
   }
 
   const { error } = await supabase.auth.signInWithPassword({
