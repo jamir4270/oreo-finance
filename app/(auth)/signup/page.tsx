@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2, UserPlus, MailCheck } from "lucide-react";
+import { Turnstile } from "@marsidev/react-turnstile";
+import { TermsDialog } from "@/components/auth/TermsDialog";
 
 export default function SignupPage() {
   const [state, formAction, isPending] = useActionState<AuthState, FormData>(
@@ -120,6 +122,37 @@ export default function SignupPage() {
                 autoComplete="new-password"
                 minLength={6}
               />
+            </div>
+
+            {/* Terms & Conditions */}
+            <div className="flex items-start gap-2 pt-2">
+              <input
+                type="checkbox"
+                id="terms"
+                name="terms"
+                value="on"
+                className="mt-[0.15rem] h-4 w-4 shrink-0 rounded border border-input text-oreo-slate-purple focus:ring-oreo-slate-purple"
+                required
+              />
+              <Label
+                htmlFor="terms"
+                className="text-sm font-normal leading-relaxed text-muted-foreground cursor-pointer"
+              >
+                I agree to the{" "}
+                <TermsDialog>
+                  <button
+                    type="button"
+                    className="text-oreo-slate-purple font-medium hover:text-oreo-periwinkle transition-colors hover:underline"
+                  >
+                    Terms & Conditions
+                  </button>
+                </TermsDialog>
+              </Label>
+            </div>
+
+            {/* Turnstile */}
+            <div className="flex justify-center pt-2 min-h-[65px]">
+              <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""} />
             </div>
 
             {/* Submit */}

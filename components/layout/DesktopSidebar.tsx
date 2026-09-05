@@ -14,6 +14,7 @@ import {
   PlusCircle,
   PieChart,
   LineChart,
+  MessageCircle,
 } from "lucide-react";
 
 interface DesktopSidebarProps {
@@ -85,6 +86,19 @@ export function DesktopSidebar({ onOpenAddTransaction }: DesktopSidebarProps) {
           );
         })}
       </nav>
+
+      {/* Feedback Link */}
+      <div className="p-4 border-t border-border mt-auto">
+        <Link
+          href="https://forms.gle/33Et1FaoLFyPtzM66"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-oreo-slate-purple px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-oreo-slate-purple/90 hover:shadow-md"
+        >
+          <MessageCircle className="h-4 w-4" />
+          Give Feedback
+        </Link>
+      </div>
     </aside>
   );
 }
