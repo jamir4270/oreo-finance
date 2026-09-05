@@ -1,6 +1,7 @@
 "use client";
 
 import { Mascot } from "@/components/ui/mascot";
+import Link from "next/link";
 
 export function MobileTopBar() {
   return (
@@ -18,6 +19,15 @@ export function MobileTopBar() {
           </span>
         </div>
       </div>
+      
+      <Link 
+        href="https://forms.gle/33Et1FaoLFyPtzM66"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-center rounded-lg bg-oreo-slate-purple px-3.5 py-2 text-xs font-semibold tracking-wide text-white shadow-sm transition-colors hover:bg-oreo-slate-purple/90 hover:shadow-md"
+      >
+        Give Feedback
+      </Link>
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2, LogIn } from "lucide-react";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState<AuthState, FormData>(
@@ -75,6 +76,11 @@ export default function LoginPage() {
                 required
                 autoComplete="current-password"
               />
+            </div>
+
+            {/* Turnstile */}
+            <div className="flex justify-center pt-2 min-h-[65px]">
+              <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""} />
             </div>
 
             {/* Submit */}
