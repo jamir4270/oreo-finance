@@ -86,7 +86,7 @@ export function EditAccountDialog({ account, open, onOpenChange }: EditAccountDi
             Update the details of your financial account.
           </DialogDescription>
         </DialogHeader>
-        <form action={formAction} className="flex flex-col gap-4 mt-4">
+        <form key={account.id} action={formAction} className="flex flex-col gap-4 mt-4">
           <input type="hidden" name="icon" value={icon} />
 
           <div className="flex flex-col gap-2">

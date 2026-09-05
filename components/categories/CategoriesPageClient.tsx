@@ -130,9 +130,9 @@ export function CategoriesPageClient({ categories }: CategoriesPageClientProps) 
       <EditCategoryDialog 
         category={editingCategory} 
         open={!!editingCategory} 
-        onOpenChange={(open) => {
+        onOpenChange={React.useCallback((open: boolean) => {
           if (!open) setEditingCategory(null);
-        }} 
+        }, [])} 
       />
 
       <AlertDialog open={!!deletingCategory} onOpenChange={(open) => {

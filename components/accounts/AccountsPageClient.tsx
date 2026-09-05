@@ -127,9 +127,9 @@ export function AccountsPageClient({ accounts, baseCurrency, rates }: AccountsPa
       <EditAccountDialog 
         account={editingAccount} 
         open={!!editingAccount} 
-        onOpenChange={(open) => {
+        onOpenChange={React.useCallback((open: boolean) => {
           if (!open) setEditingAccount(null);
-        }} 
+        }, [])} 
       />
     </>
   );
