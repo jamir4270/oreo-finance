@@ -98,7 +98,12 @@ export async function createTransaction(
   }
 
   revalidatePath("/transactions");
-  revalidatePath("/accounts"); // Refresh balances
+  revalidatePath("/accounts");
+  revalidatePath("/dashboard");
+  if (type === "expense") {
+    revalidatePath("/analytics");
+    revalidatePath("/budgets");
+  }
   return { success: "Transaction logged successfully." };
 }
 
@@ -186,7 +191,12 @@ export async function updateTransaction(
   }
 
   revalidatePath("/transactions");
-  revalidatePath("/accounts"); // Refresh balances
+  revalidatePath("/accounts");
+  revalidatePath("/dashboard");
+  if (type === "expense") {
+    revalidatePath("/analytics");
+    revalidatePath("/budgets");
+  }
   return { success: "Transaction updated successfully." };
 }
 
@@ -200,6 +210,9 @@ export async function deleteTransaction(id: string): Promise<TransactionActionSt
   }
 
   revalidatePath("/transactions");
-  revalidatePath("/accounts"); // Refresh balances
+  revalidatePath("/accounts");
+  revalidatePath("/dashboard");
+  revalidatePath("/analytics");
+  revalidatePath("/budgets");
   return { success: "Transaction deleted successfully." };
 }
