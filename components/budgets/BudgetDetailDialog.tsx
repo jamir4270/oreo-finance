@@ -22,19 +22,7 @@ interface BudgetDetailDialogProps {
   onDelete: (budget: BudgetCardData) => void;
 }
 
-function getCurrencySymbol(currency: string): string {
-  try {
-    const parts = new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency,
-      currencyDisplay: "narrowSymbol",
-    }).formatToParts(0);
-    const symbolPart = parts.find((p) => p.type === "currency");
-    return symbolPart?.value || currency;
-  } catch {
-    return currency;
-  }
-}
+import { getCurrencySymbol } from "@/lib/currency";
 
 export function BudgetDetailDialog({
   budget,
