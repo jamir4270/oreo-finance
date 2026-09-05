@@ -41,6 +41,8 @@ export interface AnalyticsBudget {
   computedSpent: number;
 }
 
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+
 export interface AnalyticsAccount {
   id: string;
   name: string;
@@ -52,6 +54,8 @@ interface AnalyticsPageClientProps {
   budgets: AnalyticsBudget[];
   accounts: AnalyticsAccount[];
   baseCurrency: string;
+  initialDateRange: string;
+  initialAccountFilter: string;
 }
 
 export function AnalyticsPageClient({
@@ -59,9 +63,21 @@ export function AnalyticsPageClient({
   budgets,
   accounts,
   baseCurrency,
+  initialDateRange,
+  initialAccountFilter,
 }: AnalyticsPageClientProps) {
-  const [dateRange, setDateRange] = React.useState<string>("last_30");
-  const [accountFilter, setAccountFilter] = React.useState<string>("all");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const dateRange = initialDateRange || "last_30";
+  const accountFilter = initialAccountFilter || "all";
+
+  const updateFilter = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set(key, value);
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   const today = new Date();
   
@@ -123,7 +139,7 @@ export function AnalyticsPageClient({
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto min-w-0">
-          <Select value={accountFilter} onValueChange={(val) => val && setAccountFilter(val)}>
+          <Select value={accountFilter} onValueChange={(val) => val && updateFilter("account", val)}>
             <SelectTrigger className="w-full sm:w-[180px] bg-card/50 min-w-0 capitalize">
               <span data-slot="select-value" className="flex flex-1 text-left truncate">
                 {accountFilter === "all" ? "All Accounts" : accounts.find(a => a.id === accountFilter)?.name || "Account"}
@@ -139,7 +155,7 @@ export function AnalyticsPageClient({
             </SelectContent>
           </Select>
 
-          <Select value={dateRange} onValueChange={(val) => val && setDateRange(val)}>
+          <Select value={dateRange} onValueChange={(val) => val && updateFilter("dateRange", val)}>
             <SelectTrigger className="w-full sm:w-[180px] bg-card/50 min-w-0 capitalize">
               <span data-slot="select-value" className="flex flex-1 text-left truncate">
                 {
