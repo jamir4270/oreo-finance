@@ -92,6 +92,12 @@ export function TransactionDialog({
       toast.success(isEdit ? "Transaction updated" : "Transaction added", {
         description: `${amountStr} ${type}`
       });
+      if (state.warning) {
+        // Slight delay so it doesn't overlap the success toast
+        setTimeout(() => {
+          toast.warning(state.warning);
+        }, 300);
+      }
     }
   }, [state, setOpen, isEdit, amountStr, type]);
 

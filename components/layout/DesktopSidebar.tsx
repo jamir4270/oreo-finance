@@ -5,6 +5,11 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   LayoutDashboard,
   ArrowLeftRight,
   Wallet,
@@ -15,7 +20,9 @@ import {
   PieChart,
   LineChart,
   MessageCircle,
+  LogOut,
 } from "lucide-react";
+import { logout } from "@/app/actions/auth";
 
 interface DesktopSidebarProps {
   onOpenAddTransaction: () => void;
@@ -87,8 +94,29 @@ export function DesktopSidebar({ onOpenAddTransaction }: DesktopSidebarProps) {
         })}
       </nav>
 
-      {/* Feedback Link */}
-      <div className="p-4 border-t border-border mt-auto">
+      {/* Footer: Sign Out + Feedback */}
+      <div className="p-4 border-t border-border mt-auto flex flex-col gap-2">
+        <Popover>
+          <PopoverTrigger className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground">
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </PopoverTrigger>
+          <PopoverContent align="center" side="top" className="w-[200px] p-4">
+            <div className="flex flex-col gap-3 text-center">
+              <span className="text-sm font-medium">Are you sure?</span>
+              <form action={logout}>
+                <Button
+                  type="submit"
+                  variant="destructive"
+                  size="sm"
+                  className="w-full"
+                >
+                  Sign Out
+                </Button>
+              </form>
+            </div>
+          </PopoverContent>
+        </Popover>
         <Link
           href="https://forms.gle/33Et1FaoLFyPtzM66"
           target="_blank"
