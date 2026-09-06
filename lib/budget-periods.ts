@@ -26,6 +26,20 @@ export function computePeriodBounds(
     };
   }
 
+  if (budget.period_type === "daily") {
+    // 1-day windows anchored from start_date
+    const diffMs = ref.getTime() - anchor.getTime();
+    const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+    const periodStartDate = new Date(anchor);
+    periodStartDate.setDate(periodStartDate.getDate() + diffDays);
+    const periodEndDate = new Date(periodStartDate);
+    
+    return {
+      periodStart: toDateString(periodStartDate),
+      periodEnd: toDateString(periodEndDate),
+    };
+  }
+
   if (budget.period_type === "weekly") {
     // 7-day windows anchored from start_date
     const diffMs = ref.getTime() - anchor.getTime();
