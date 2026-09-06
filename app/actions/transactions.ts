@@ -18,7 +18,8 @@ export async function createTransaction(
   const supabase = await createClient();
 
   const type = formData.get("type") as string;
-  const amountStr = formData.get("amount") as string;
+  const inputAmountStr = formData.get("input_amount") as string;
+  const inputCurrency = formData.get("input_currency") as string;
   const account_id = formData.get("account_id") as string;
   const category_id = formData.get("category_id") as string;
   const txn_date = formData.get("txn_date") as string;
@@ -26,7 +27,7 @@ export async function createTransaction(
 
   const to_account_id = formData.get("to_account_id") as string | null;
 
-  if (!type || !amountStr || !account_id || !category_id || !txn_date) {
+  if (!type || !inputAmountStr || !account_id || !category_id || !txn_date) {
     return { error: "Please fill in all required fields." };
   }
 
@@ -38,8 +39,8 @@ export async function createTransaction(
     return { error: "Source and destination accounts must be different." };
   }
 
-  const amount = parseFloat(amountStr);
-  if (isNaN(amount) || amount <= 0) {
+  const inputAmount = parseFloat(inputAmountStr);
+  if (isNaN(inputAmount) || inputAmount <= 0) {
     return { error: "Amount must be greater than zero." };
   }
 
@@ -48,28 +49,42 @@ export async function createTransaction(
     return { error: "You must be logged in to log a transaction." };
   }
 
+  // Fetch account currencies
+  const { data: accountsData } = await supabase
+    .from("accounts")
+    .select("id, currency")
+    .in("id", to_account_id ? [account_id, to_account_id] : [account_id]);
+
+  const sourceAccount = accountsData?.find((a) => a.id === account_id);
+  const destAccount = accountsData?.find((a) => a.id === to_account_id);
+
+  if (!sourceAccount) {
+    return { error: "Could not fetch source account details." };
+  }
+
+  let amount = inputAmount;
+  let original_amount: number | null = null;
+  let original_currency: string | null = null;
+
+  if (inputCurrency && inputCurrency !== sourceAccount.currency) {
+    const { rates } = await getExchangeRates();
+    amount = convertCurrency(inputAmount, inputCurrency, sourceAccount.currency, rates);
+    original_amount = inputAmount;
+    original_currency = inputCurrency;
+  }
+
   // Handle cross-currency transfers
   let to_amount: number | null = null;
   let exchange_rate: number | null = null;
 
   if (type === "transfer" && to_account_id) {
-    // Fetch source and destination account currencies
-    const { data: accountsData } = await supabase
-      .from("accounts")
-      .select("id, currency")
-      .in("id", [account_id, to_account_id]);
-
-    const sourceAccount = accountsData?.find((a) => a.id === account_id);
-    const destAccount = accountsData?.find((a) => a.id === to_account_id);
-
-    if (!sourceAccount || !destAccount) {
-      return { error: "Could not fetch account details for transfer." };
+    if (!destAccount) {
+      return { error: "Could not fetch destination account details for transfer." };
     }
 
     if (sourceAccount.currency !== destAccount.currency) {
       const { rates } = await getExchangeRates();
       to_amount = convertCurrency(amount, sourceAccount.currency, destAccount.currency, rates);
-      // Determine the exchange rate applied
       exchange_rate = rates[destAccount.currency] / rates[sourceAccount.currency];
     } else {
       to_amount = amount;
@@ -86,6 +101,8 @@ export async function createTransaction(
     to_account_id: type === "transfer" ? to_account_id : null,
     to_amount,
     exchange_rate,
+    original_amount,
+    original_currency,
     account_id,
     category_id,
     txn_date,
@@ -169,7 +186,8 @@ export async function updateTransaction(
   const supabase = await createClient();
 
   const type = formData.get("type") as string;
-  const amountStr = formData.get("amount") as string;
+  const inputAmountStr = formData.get("input_amount") as string;
+  const inputCurrency = formData.get("input_currency") as string;
   const account_id = formData.get("account_id") as string;
   const category_id = formData.get("category_id") as string;
   const txn_date = formData.get("txn_date") as string;
@@ -177,7 +195,7 @@ export async function updateTransaction(
 
   const to_account_id = formData.get("to_account_id") as string | null;
 
-  if (!type || !amountStr || !account_id || !category_id || !txn_date) {
+  if (!type || !inputAmountStr || !account_id || !category_id || !txn_date) {
     return { error: "Please fill in all required fields." };
   }
 
@@ -189,9 +207,33 @@ export async function updateTransaction(
     return { error: "Source and destination accounts must be different." };
   }
 
-  const amount = parseFloat(amountStr);
-  if (isNaN(amount) || amount <= 0) {
+  const inputAmount = parseFloat(inputAmountStr);
+  if (isNaN(inputAmount) || inputAmount <= 0) {
     return { error: "Amount must be greater than zero." };
+  }
+
+  // Fetch account currencies
+  const { data: accountsData } = await supabase
+    .from("accounts")
+    .select("id, currency")
+    .in("id", to_account_id ? [account_id, to_account_id] : [account_id]);
+
+  const sourceAccount = accountsData?.find((a) => a.id === account_id);
+  const destAccount = accountsData?.find((a) => a.id === to_account_id);
+
+  if (!sourceAccount) {
+    return { error: "Could not fetch source account details." };
+  }
+
+  let amount = inputAmount;
+  let original_amount: number | null = null;
+  let original_currency: string | null = null;
+
+  if (inputCurrency && inputCurrency !== sourceAccount.currency) {
+    const { rates } = await getExchangeRates();
+    amount = convertCurrency(inputAmount, inputCurrency, sourceAccount.currency, rates);
+    original_amount = inputAmount;
+    original_currency = inputCurrency;
   }
 
   // Handle cross-currency transfers
@@ -199,17 +241,8 @@ export async function updateTransaction(
   let exchange_rate: number | null = null;
 
   if (type === "transfer" && to_account_id) {
-    // Fetch source and destination account currencies
-    const { data: accountsData } = await supabase
-      .from("accounts")
-      .select("id, currency")
-      .in("id", [account_id, to_account_id]);
-
-    const sourceAccount = accountsData?.find((a) => a.id === account_id);
-    const destAccount = accountsData?.find((a) => a.id === to_account_id);
-
-    if (!sourceAccount || !destAccount) {
-      return { error: "Could not fetch account details for transfer." };
+    if (!destAccount) {
+      return { error: "Could not fetch destination account details for transfer." };
     }
 
     if (sourceAccount.currency !== destAccount.currency) {
@@ -232,6 +265,8 @@ export async function updateTransaction(
       to_account_id: type === "transfer" ? to_account_id : null,
       to_amount: type === "transfer" ? to_amount : null,
       exchange_rate: type === "transfer" ? exchange_rate : null,
+      original_amount,
+      original_currency,
       account_id,
       category_id,
       txn_date,
