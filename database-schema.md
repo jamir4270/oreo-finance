@@ -137,6 +137,8 @@ The central table. One row per logged Expense, Income, or Transfer.
 | `amount` | `numeric` | NOT NULL, `CHECK (amount > 0)` | In `account_id`'s currency. |
 | `to_amount` | `numeric` | NULLABLE, `CHECK (to_amount IS NULL OR to_amount > 0)` | Only set for transfers; amount received in `to_account_id`'s currency. |
 | `exchange_rate` | `numeric` | NULLABLE | Only set for cross-currency transfers; the rate applied at transaction time. |
+| `original_amount` | `numeric` | NULLABLE | The amount entered in a foreign currency, before conversion to `account_id`'s currency. |
+| `original_currency` | `text` | NULLABLE, `CHECK (char_length(original_currency) = 3)` | The foreign currency code (ISO 4217) for `original_amount`. |
 | `txn_date` | `date` | NOT NULL | The date the transaction is logged against (may differ from `created_at` if backdated). |
 | `note` | `text` | NULLABLE | |
 | `client_created_at` | `timestamptz` | NOT NULL | Client-side timestamp, used for last-write-wins conflict resolution on offline sync (FR-9.4). |
@@ -206,7 +208,7 @@ The user's current budgeting rule per category. Represents "what should happen g
 | `user_id` | `uuid` | NOT NULL, FK → `profiles(id)` `ON DELETE CASCADE` | |
 | `category_id` | `uuid` | NOT NULL, FK → `categories(id)` `ON DELETE RESTRICT` | |
 | `limit_amount` | `numeric` | NOT NULL, `CHECK (limit_amount > 0)` | The base limit before rollover adjustment. |
-| `period_type` | `text` | NOT NULL, `CHECK (period_type IN ('weekly','monthly','custom'))` | |
+| `period_type` | `text` | NOT NULL, `CHECK (period_type IN ('daily','weekly','monthly','custom'))` | |
 | `start_date` | `date` | NOT NULL | Anchor date for weekly/monthly cycles, or the start of a one-off custom period. |
 | `end_date` | `date` | NULLABLE | Only set (and required) when `period_type = 'custom'`. |
 | `created_at` | `timestamptz` | NOT NULL, DEFAULT `now()` | |

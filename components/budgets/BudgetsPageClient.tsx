@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
@@ -33,6 +34,7 @@ export function BudgetsPageClient({ budgets, categories, baseCurrency }: Budgets
   const [deleteError, setDeleteError] = React.useState<string | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [isCreateOpen, setIsCreateOpen] = React.useState(false);
+  const [periodFilter, setPeriodFilter] = React.useState<string>("all");
 
   const existingCategoryIds = budgets.map((b) => b.category_id);
 
@@ -55,8 +57,13 @@ export function BudgetsPageClient({ budgets, categories, baseCurrency }: Budgets
     }
   };
 
-  // Sort budgets by category name
-  const sortedBudgets = [...budgets].sort((a, b) => {
+  // Filter and sort budgets
+  const filteredBudgets = budgets.filter((b) => {
+    if (periodFilter === "all") return true;
+    return b.period_type === periodFilter;
+  });
+
+  const sortedBudgets = [...filteredBudgets].sort((a, b) => {
     const nameA = a.category?.name || "";
     const nameB = b.category?.name || "";
     return nameA.localeCompare(nameB);
@@ -85,12 +92,32 @@ export function BudgetsPageClient({ budgets, categories, baseCurrency }: Budgets
       </div>
 
       <div className="mt-6 flex-1">
-        {sortedBudgets.length === 0 ? (
+        {budgets.length > 0 && (
+          <div className="mb-4 flex justify-center sm:justify-start">
+            <Tabs value={periodFilter} onValueChange={setPeriodFilter} className="w-full max-w-full overflow-x-auto text-center sm:text-left">
+              <TabsList className="inline-flex w-max sm:w-fit mx-auto sm:mx-0">
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="daily">Daily</TabsTrigger>
+                <TabsTrigger value="weekly">Weekly</TabsTrigger>
+                <TabsTrigger value="monthly">Monthly</TabsTrigger>
+                <TabsTrigger value="custom">Custom</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        )}
+
+        {budgets.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/30 p-12 text-center mt-8">
             <p className="text-sm text-muted-foreground max-w-xs mb-4">
               No budgets yet — set one up to start tracking your spending limits.
             </p>
             <Button onClick={() => setIsCreateOpen(true)}>Add Budget</Button>
+          </div>
+        ) : sortedBudgets.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/30 p-12 text-center mt-8">
+            <p className="text-sm text-muted-foreground max-w-xs mb-4">
+              No {periodFilter} budgets found.
+            </p>
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
