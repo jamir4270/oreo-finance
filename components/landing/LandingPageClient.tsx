@@ -1,326 +1,590 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, PieChart, Shield, Smartphone, Heart, PawPrint } from "lucide-react";
-import { motion, useScroll, useTransform, useSpring, useReducedMotion } from "motion/react";
-import confetti from "canvas-confetti";
+import { ArrowRight } from "lucide-react";
+import { motion, useScroll, useTransform, useReducedMotion } from "motion/react";
+
+/* ─── Ledger row data (USD) ─── */
+const LEDGER_ROWS = [
+  {
+    emoji: "🛒",
+    dotBg: "#fbe3e6",
+    name: "Groceries",
+    sub: "Today · Cash",
+    amount: "-120.00",
+    type: "expense" as const,
+  },
+  {
+    emoji: "💰",
+    dotBg: "#dff2ef",
+    name: "Salary",
+    sub: "Yesterday · Bank",
+    amount: "+3,200.00",
+    type: "income" as const,
+  },
+  {
+    emoji: "✈️",
+    dotBg: "#eceafd",
+    name: "Hotel, Tokyo",
+    sub: "Jun 2 · converted from ¥18,400",
+    amount: "-128.50",
+    type: "expense" as const,
+  },
+];
 
 export function LandingPageClient({ isLoggedIn }: { isLoggedIn: boolean }) {
   const prefersReducedMotion = useReducedMotion();
-  const [isTouch, setIsTouch] = useState(true); 
   const [mounted, setMounted] = useState(false);
-  
+
+  /* ── Scroll-driven nav ── */
   const { scrollY } = useScroll();
-  const headerBgOpacity = useTransform(scrollY, [0, 50], [0, 0.8]);
-  const headerShadow = useTransform(scrollY, [0, 50], ["none", "0 4px 24px rgba(86,86,118,0.08)"]);
-  const headerBorder = useTransform(scrollY, [0, 50], ["transparent", "rgba(var(--border), 0.5)"]);
+  const navBgOpacity = useTransform(scrollY, [0, 50], [0, 0.85]);
+  const navBlur = useTransform(scrollY, [0, 50], [0, 10]);
+  const navBorderOpacity = useTransform(scrollY, [0, 50], [0, 0.08]);
 
-  // Custom Cursor state
-  const cursorX = useSpring(0, { stiffness: 300, damping: 28 });
-  const cursorY = useSpring(0, { stiffness: 300, damping: 28 });
-  const cursorRingX = useSpring(0, { stiffness: 150, damping: 20 });
-  const cursorRingY = useSpring(0, { stiffness: 150, damping: 20 });
+  /* ── Browser frame 3D tilt ── */
+  const frameRef = useRef<HTMLDivElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [frameTilt, setFrameTilt] = useState({ rY: -8, rX: 4 });
 
-  // Parallax mascot eyes/head state
-  const mouseX = useSpring(0, { stiffness: 200, damping: 30 });
-  const mouseY = useSpring(0, { stiffness: 200, damping: 30 });
-  
-  // Odometer state
-  const [balance, setBalance] = useState(1204.50);
+  /* ── Ledger stagger ── */
+  const [rowsVisible, setRowsVisible] = useState<boolean[]>(
+    LEDGER_ROWS.map(() => false)
+  );
 
   useEffect(() => {
     setMounted(true);
-    setIsTouch(window.matchMedia("(pointer: coarse)").matches);
-    
-    const handleMouseMove = (e: MouseEvent) => {
-      cursorX.set(e.clientX);
-      cursorY.set(e.clientY);
-      cursorRingX.set(e.clientX);
-      cursorRingY.set(e.clientY);
-      
-      // Normalize for parallax (-1 to 1)
-      mouseX.set((e.clientX / window.innerWidth) * 2 - 1);
-      mouseY.set((e.clientY / window.innerHeight) * 2 - 1);
-    };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [cursorX, cursorY, cursorRingX, cursorRingY, mouseX, mouseY]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setBalance(prev => {
-        if (prev === 1204.50) return 3880.12;
-        if (prev === 3880.12) return 5100.00;
-        return 1204.50;
-      });
-    }, 4000);
-    return () => clearInterval(interval);
+    /* stagger ledger rows in on load */
+    LEDGER_ROWS.forEach((_, i) => {
+      setTimeout(
+        () =>
+          setRowsVisible((prev) => {
+            const next = [...prev];
+            next[i] = true;
+            return next;
+          }),
+        500 + i * 180
+      );
+    });
   }, []);
 
-  const handleConfetti = () => {
+  /* Mouse-tilt handler for the browser frame */
+  const handleFrameMouseMove = (e: React.MouseEvent) => {
     if (prefersReducedMotion) return;
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ['#565676', '#d8dcff', '#9797b8']
-    });
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const r = wrap.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    setFrameTilt({ rY: -8 + x * 12, rX: 4 - y * 10 });
   };
 
-  const showCustomCursor = !isTouch && !prefersReducedMotion;
+  const handleFrameMouseLeave = () => {
+    setFrameTilt({ rY: -8, rX: 4 });
+  };
+
+  const ctaHref = isLoggedIn ? "/dashboard" : "/login";
+  const ctaLabel = isLoggedIn ? "Go to Dashboard" : "Start tracking free";
 
   return (
-    <div className={`flex flex-col min-h-screen bg-background ${showCustomCursor ? "cursor-none" : ""}`}>
-      {/* Custom Cursor */}
-      {showCustomCursor && (
-        <>
-          <motion.div 
-            className="fixed top-0 left-0 w-3 h-3 bg-oreo-periwinkle rounded-full pointer-events-none z-[100]"
-            style={{ x: cursorX, y: cursorY, translateX: "-50%", translateY: "-50%" }}
-          />
-          <motion.div 
-            className="fixed top-0 left-0 w-8 h-8 border-2 border-oreo-slate-purple/30 rounded-full pointer-events-none z-[99]"
-            style={{ x: cursorRingX, y: cursorRingY, translateX: "-50%", translateY: "-50%" }}
-          />
-        </>
-      )}
-
-      {/* Sticky Nav */}
-      <motion.header 
-        className="flex h-20 items-center justify-between px-6 md:px-12 sticky top-0 z-50 transition-colors"
-        style={{ 
-          backgroundColor: useTransform(headerBgOpacity, opacity => `rgba(255, 255, 255, ${opacity})`), 
-          backdropFilter: useTransform(scrollY, y => y > 10 ? "blur(12px)" : "none"),
-          boxShadow: headerShadow,
-          borderBottom: useTransform(headerBorder, border => `1px solid ${border}`)
+    <div className="flex flex-col min-h-screen bg-[#f5f6ff] text-[#3d3d5c] font-sans antialiased overflow-x-hidden">
+      {/* ════════════════════════ NAV ════════════════════════ */}
+      <motion.nav
+        className="sticky top-0 z-50 flex items-center justify-between px-7 py-5 transition-colors"
+        style={{
+          backgroundColor: useTransform(
+            navBgOpacity,
+            (o) => `rgba(251,251,255,${o})`
+          ),
+          backdropFilter: useTransform(navBlur, (b) => `blur(${b}px)`),
+          borderBottom: useTransform(
+            navBorderOpacity,
+            (o) => `1px solid rgba(86,86,118,${o})`
+          ),
         }}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <Image
             src="/oreo.svg"
             alt="Oreo Mascot"
-            width={36}
-            height={36}
-            className="h-9 w-9"
+            width={30}
+            height={30}
+            className="w-[30px] h-[30px]"
             style={{ imageRendering: "pixelated" }}
           />
-          <span className="font-heading text-2xl font-bold tracking-tight text-oreo-slate-purple">
+          <span className="font-heading text-xl font-semibold text-[#3d3d5c]">
             Oreo
           </span>
         </div>
-        <nav>
-          {isLoggedIn ? (
-            <Link href="/dashboard" className={showCustomCursor ? "cursor-none" : ""}>
-              <Button className={`gap-2 shadow-oreo-sm hover:-translate-y-0.5 hover:shadow-oreo-md transition-all ${showCustomCursor ? "cursor-none" : ""}`}>
-                Dashboard <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          ) : (
-            <Link href="/login" className={showCustomCursor ? "cursor-none" : ""}>
-              <Button className={`gap-2 shadow-oreo-sm hover:-translate-y-0.5 hover:shadow-oreo-md transition-all ${showCustomCursor ? "cursor-none" : ""}`}>
-                Get Started
-              </Button>
+
+        <div className="flex items-center gap-5">
+          <a
+            href="#how"
+            className="hidden md:inline text-sm font-medium text-[#3d3d5c] opacity-75 hover:opacity-100 transition-opacity no-underline"
+          >
+            How it works
+          </a>
+          <a
+            href="#features"
+            className="hidden md:inline text-sm font-medium text-[#3d3d5c] opacity-75 hover:opacity-100 transition-opacity no-underline"
+          >
+            Features
+          </a>
+          {!isLoggedIn && (
+            <Link
+              href="/login"
+              className="hidden md:inline text-sm font-medium text-[#3d3d5c] opacity-75 hover:opacity-100 transition-opacity no-underline"
+            >
+              Log in
             </Link>
           )}
-        </nav>
-      </motion.header>
+          <Link href={ctaHref}>
+            <button className="inline-flex items-center gap-2 px-5 py-[11px] rounded-[11px] font-semibold text-sm bg-[#3d3d5c] text-white border-none cursor-pointer shadow-[0_6px_18px_rgba(61,61,92,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(61,61,92,0.34)] active:scale-[0.97]">
+              {isLoggedIn ? "Dashboard" : "Get started"}
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </Link>
+        </div>
+      </motion.nav>
 
-      <main className="flex-1 flex flex-col items-center relative overflow-hidden">
-        {/* Blob Background */}
-        {mounted && !prefersReducedMotion && (
-          <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-40">
-            <motion.div 
-              className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-oreo-lavender blur-3xl mix-blend-multiply"
-              animate={{
-                x: [0, 100, 0],
-                y: [0, 50, 0],
-              }}
-              transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <motion.div 
-              className="absolute top-[20%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-oreo-periwinkle blur-3xl mix-blend-multiply"
-              animate={{
-                x: [0, -80, 0],
-                y: [0, 120, 0],
-              }}
-              transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}
-            />
-          </div>
-        )}
+      {/* ════════════════════════ HERO ════════════════════════ */}
+      <section className="relative">
+        {/* Blob */}
+        <div
+          className="absolute top-[-140px] right-[-160px] w-[520px] h-[520px] rounded-full opacity-55 pointer-events-none z-0"
+          style={{
+            background:
+              "radial-gradient(circle at 35% 35%, #aeadf0, transparent 70%)",
+            filter: "blur(10px)",
+          }}
+        />
 
-        {/* Hero Section */}
-        <section className="relative z-10 w-full max-w-6xl px-6 py-20 md:py-32 flex flex-col md:flex-row items-center gap-12 text-center md:text-left">
-          <div className="flex-1 space-y-6">
-            <h1 className="font-heading text-5xl md:text-7xl font-bold tracking-tight text-oreo-slate-purple leading-[1.1]">
-              Personal finance, <br className="hidden md:block"/>
-              purr-fectly tracked.
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
-              Track your income, expenses, and transfers across multiple accounts and currencies. Meet Oreo, your playful companion to financial clarity.
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-14 items-center max-w-[1120px] mx-auto px-7 pt-16 pb-10">
+          {/* Left copy */}
+          <div className="relative z-10">
+            <p className="text-sm text-[#565676] opacity-80 mb-3.5">
+              Your own personal feline financial partner. Built for real money.
             </p>
-            <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 justify-center md:justify-start">
-              {isLoggedIn ? (
-                <Link href="/dashboard" className={showCustomCursor ? "cursor-none" : ""}>
-                  <Button size="lg" className={`h-14 px-8 text-lg font-medium shadow-oreo-sm hover:-translate-y-0.5 hover:shadow-oreo-md transition-all duration-300 w-full sm:w-auto ${showCustomCursor ? "cursor-none" : ""}`}>
-                    Go to Dashboard
-                  </Button>
-                </Link>
-              ) : (
-                <Link href="/login" className={showCustomCursor ? "cursor-none" : ""}>
-                  <Button size="lg" className={`h-14 px-8 text-lg font-medium shadow-oreo-sm hover:-translate-y-0.5 hover:shadow-oreo-md transition-all duration-300 w-full sm:w-auto ${showCustomCursor ? "cursor-none" : ""}`}>
-                    Start tracking for free
-                  </Button>
-                </Link>
-              )}
+            <h1 className="font-heading text-[clamp(38px,5vw,52px)] leading-[1.05] font-semibold text-[#3d3d5c] tracking-[-0.5px] mb-5">
+              See where your
+              <br />
+              money actually went.
+            </h1>
+            <p className="text-[17px] leading-[1.6] text-[#5b5b78] max-w-[440px] mb-7">
+              Log expenses, income, and transfers across every account and
+              currency you use. Oreo handles the converting and the adding so
+              your dashboard is never a guess.
+            </p>
+            <div className="flex items-center gap-4 flex-wrap">
+              <Link href={ctaHref}>
+                <button className="inline-flex items-center gap-2 px-5 py-[11px] rounded-[11px] font-semibold text-sm bg-[#3d3d5c] text-white border-none cursor-pointer shadow-[0_6px_18px_rgba(61,61,92,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(61,61,92,0.34)] active:scale-[0.97]">
+                  {ctaLabel}
+                </button>
+              </Link>
             </div>
           </div>
-          
-          <div className="flex-1 flex justify-center items-center w-full max-w-md md:max-w-none perspective-1000">
-            <motion.div 
-              className="relative w-full aspect-square max-w-[400px] rounded-3xl bg-oreo-lavender/30 border border-oreo-periwinkle/20 flex flex-col items-center justify-center overflow-hidden shadow-oreo-lg"
+
+          {/* Right — Browser frame */}
+          <div
+            ref={wrapRef}
+            className="relative z-10"
+            style={{ perspective: "1400px" }}
+            onMouseMove={handleFrameMouseMove}
+            onMouseLeave={handleFrameMouseLeave}
+          >
+            <div
+              ref={frameRef}
+              className="bg-[#fbfbff] rounded-[20px] overflow-hidden relative"
               style={{
-                rotateX: useTransform(mouseY, [-1, 1], [5, -5]),
-                rotateY: useTransform(mouseX, [-1, 1], [-5, 5]),
-                clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 40px), calc(100% - 40px) 100%, 0 100%)"
+                boxShadow:
+                  "0 30px 70px -20px rgba(61,61,92,0.35), 0 10px 24px -8px rgba(61,61,92,0.18)",
+                transform: `rotateY(${frameTilt.rY}deg) rotateX(${frameTilt.rX}deg) rotate(-1.5deg)`,
+                transition: "transform 0.4s cubic-bezier(0.22,1,0.36,1)",
               }}
             >
-              <div className="absolute inset-0 bg-gradient-to-tr from-oreo-slate-purple/5 to-transparent pointer-events-none" />
-              
-              {/* Odometer Balance */}
-              <div className="mb-6 bg-card/80 backdrop-blur-sm px-6 py-3 rounded-2xl shadow-sm border border-border/50">
-                <span className="font-mono text-3xl font-bold tracking-tight text-foreground flex items-center">
-                  $
-                  <motion.span 
-                    key={balance}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ ease: "easeOut", duration: 0.3 }}
-                    className="inline-block ml-1"
+              {/* Bite mark */}
+              <div
+                className="absolute top-[-1px] right-[-1px] w-14 h-14 bg-[#f5f6ff] rounded-full z-10"
+                style={{ transform: "translate(28px,-28px)" }}
+              />
+
+              {/* Browser chrome */}
+              <div className="flex items-center gap-1.5 px-4 py-3 bg-[#eeeffb] border-b border-[rgba(86,86,118,0.08)]">
+                <span className="w-[9px] h-[9px] rounded-full bg-[#d6d6ea]" />
+                <span className="w-[9px] h-[9px] rounded-full bg-[#d6d6ea]" />
+                <span className="w-[9px] h-[9px] rounded-full bg-[#d6d6ea]" />
+              </div>
+
+              {/* App body */}
+              <div className="px-[22px] py-[22px] pb-[26px]">
+                <div className="text-[11px] text-[#8888a6] mb-1">
+                  Total balance
+                </div>
+                <div className="text-[34px] font-semibold text-[#3d3d5c] mb-[18px] font-heading">
+                  $4,231
+                  <span className="text-[20px] text-[#9c9cb8]">.85</span>
+                </div>
+
+                {/* Ledger rows — staggered in */}
+                {LEDGER_ROWS.map((row, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between px-3 py-[11px] rounded-[11px] bg-[#f6f6ff] mb-2 transition-all duration-500"
+                    style={{
+                      opacity: rowsVisible[i] ? 1 : 0,
+                      transform: rowsVisible[i]
+                        ? "translateY(0)"
+                        : "translateY(10px)",
+                      transitionTimingFunction:
+                        "cubic-bezier(0.22, 1, 0.36, 1)",
+                    }}
                   >
-                    {balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                  </motion.span>
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className="w-[30px] h-[30px] rounded-full flex items-center justify-center text-sm"
+                        style={{ background: row.dotBg }}
+                      >
+                        {row.emoji}
+                      </div>
+                      <div>
+                        <div className="text-[13.5px] font-medium text-[#3d3d5c]">
+                          {row.name}
+                        </div>
+                        <div className="text-[11px] text-[#9c9cb8]">
+                          {row.sub}
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      className={`font-mono text-[13.5px] font-semibold ${
+                        row.type === "expense"
+                          ? "text-[#a76571]"
+                          : "text-[#5f8f8a]"
+                      }`}
+                    >
+                      {row.amount}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════ INK BAND ════════════════════════ */}
+      <section className="bg-[#3d3d5c] text-white py-[90px] px-7 mt-10 text-center">
+        <p className="text-sm text-[#c7c7e8] mb-4">
+          the number that actually matters
+        </p>
+        <div className="font-mono font-bold text-[clamp(48px,9vw,104px)] tracking-[-2px] leading-none text-white mb-[18px]">
+          <span className="text-[#aeadf0]">$</span>4,231.85
+        </div>
+        <p className="text-[#b9b9dc] max-w-[480px] mx-auto text-[15px] leading-[1.6]">
+          Converted live across every currency you hold. Not what you think is
+          in there, what&apos;s actually in there.
+        </p>
+      </section>
+
+      {/* ════════════════════════ HOW IT WORKS ════════════════════════ */}
+      <section id="how" className="max-w-[1120px] mx-auto px-7 pt-[100px] pb-[60px]">
+        <div className="max-w-[520px] mb-14">
+          <h2 className="font-heading text-[34px] font-semibold text-[#3d3d5c] mb-3">
+            Three steps. That&apos;s the whole system.
+          </h2>
+          <p className="text-[#5b5b78] text-base leading-[1.6]">
+            No linked bank accounts, no automated guessing. You log it, Oreo
+            organizes it.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-7">
+          {/* Step 01 */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{
+              duration: 0.6,
+              ease: [0.22, 1, 0.36, 1],
+              delay: 0,
+            }}
+            className="pt-1.5"
+          >
+            <span className="inline-block font-mono font-bold text-sm text-[#565676] bg-[#d8dcff] px-2.5 py-1 rounded-lg mb-[18px]">
+              01
+            </span>
+            <h3 className="font-heading text-[19px] font-semibold text-[#3d3d5c] mb-2">
+              Log it
+            </h3>
+            <p className="text-[14.5px] text-[#6b6b88] leading-[1.6] mb-[18px]">
+              Expense, income, or transfer, in whatever currency you actually
+              paid in.
+            </p>
+            <div className="bg-[#fbfbff] rounded-[14px] p-3.5 shadow-[0_10px_26px_-12px_rgba(61,61,92,0.22)]">
+              <div className="flex items-center justify-between py-[7px] text-[12.5px]">
+                <span>Amount</span>
+                <span className="font-mono">$40.00</span>
+              </div>
+              <div className="flex items-center justify-between py-[7px] text-[12.5px] border-t border-dashed border-[#e2e2f2]">
+                <span>Account</span>
+                <span className="text-[11px] font-semibold bg-[#d8dcff] text-[#565676] px-2 py-[3px] rounded-full">
+                  Travel Wallet
                 </span>
               </div>
-              
-              {/* Mascot */}
-              <motion.div
-                style={{
-                  x: useTransform(mouseX, [-1, 1], [-8, 8]),
-                  y: useTransform(mouseY, [-1, 1], [-8, 8]),
-                }}
-              >
-                <motion.div
-                  animate={{
-                    y: [0, -4, 0],
-                  }}
-                  transition={{
-                    duration: 4,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                >
-                  <Image
-                    src="/oreo.svg"
-                    alt="Oreo Mascot"
-                    width={200}
-                    height={200}
-                    className="w-48 h-48 drop-shadow-xl"
-                    style={{ imageRendering: "pixelated" }}
-                  />
-                </motion.div>
-              </motion.div>
-            </motion.div>
-          </div>
-        </section>
+            </div>
+          </motion.div>
 
-        {/* Features Section */}
-        <section className="relative z-10 w-full bg-oreo-periwinkle/5 py-24 px-6 border-t border-border/50">
-          <div className="max-w-6xl mx-auto space-y-16">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
+          {/* Step 02 */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{
+              duration: 0.6,
+              ease: [0.22, 1, 0.36, 1],
+              delay: 0.12,
+            }}
+            className="pt-1.5"
+          >
+            <span className="inline-block font-mono font-bold text-sm text-[#565676] bg-[#d8dcff] px-2.5 py-1 rounded-lg mb-[18px]">
+              02
+            </span>
+            <h3 className="font-heading text-[19px] font-semibold text-[#3d3d5c] mb-2">
+              Categorize
+            </h3>
+            <p className="text-[14.5px] text-[#6b6b88] leading-[1.6] mb-[18px]">
+              Pick from a curated icon set, or let your defaults do the sorting.
+            </p>
+            <div className="bg-[#fbfbff] rounded-[14px] p-3.5 shadow-[0_10px_26px_-12px_rgba(61,61,92,0.22)]">
+              <div className="flex items-center justify-between py-[7px] text-[12.5px]">
+                <span>🍜 Dining</span>
+                <span className="text-[11px] font-semibold bg-[#d8dcff] text-[#565676] px-2 py-[3px] rounded-full">
+                  Expense
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-[7px] text-[12.5px] border-t border-dashed border-[#e2e2f2]">
+                <span>🚕 Transport</span>
+                <span className="text-[11px] font-semibold bg-[#d8dcff] text-[#565676] px-2 py-[3px] rounded-full">
+                  Expense
+                </span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Step 03 */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{
+              duration: 0.6,
+              ease: [0.22, 1, 0.36, 1],
+              delay: 0.24,
+            }}
+            className="pt-1.5"
+          >
+            <span className="inline-block font-mono font-bold text-sm text-[#565676] bg-[#d8dcff] px-2.5 py-1 rounded-lg mb-[18px]">
+              03
+            </span>
+            <h3 className="font-heading text-[19px] font-semibold text-[#3d3d5c] mb-2">
+              Watch it roll up
+            </h3>
+            <p className="text-[14.5px] text-[#6b6b88] leading-[1.6] mb-[18px]">
+              Every account, every currency, converted into one honest total.
+            </p>
+            <div className="bg-[#fbfbff] rounded-[14px] p-3.5 shadow-[0_10px_26px_-12px_rgba(61,61,92,0.22)]">
+              <div className="flex items-center justify-between py-[7px] text-[12.5px]">
+                <span>USD wallet</span>
+                <span className="font-mono">$1,200.40</span>
+              </div>
+              <div className="flex items-center justify-between py-[7px] text-[12.5px] border-t border-dashed border-[#e2e2f2]">
+                <span>JPY savings</span>
+                <span className="font-mono">$3,031.45</span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ════════════════════════ FEATURES (RECEIPT CARDS) ════════════════════════ */}
+      <section
+        id="features"
+        className="max-w-[1120px] mx-auto px-7 pt-[60px] pb-[110px]"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-[1.15fr_0.85fr] gap-6">
+          {/* Left stack */}
+          <div className="flex flex-col gap-6">
+            {/* Receipt: Budgets */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
+              viewport={{ once: true, margin: "-80px" }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="text-center space-y-4 max-w-2xl mx-auto"
+              className="relative bg-[#fbfbff] rounded-t-[18px] rounded-b-none px-7 pt-[30px] pb-[34px] shadow-[0_16px_36px_-18px_rgba(61,61,92,0.24)]"
             >
-              <h2 className="font-heading text-3xl md:text-4xl font-bold text-oreo-slate-purple">
-                Everything you need to manage your money
-              </h2>
-              <p className="text-muted-foreground text-lg">
-                Simple, beautiful, and powerful tools designed to help you understand your spending habits.
+              {/* Torn edge */}
+              <div
+                className="absolute left-0 right-0 bottom-[-9px] h-[18px]"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(135deg, #f5f6ff 50%, transparent 50%), linear-gradient(45deg, #f5f6ff 50%, transparent 50%)",
+                  backgroundSize: "18px 18px",
+                  backgroundRepeat: "repeat-x",
+                }}
+              />
+              <div className="w-[34px] h-1 rounded-[3px] bg-[#565676] mb-[18px]" />
+              <h3 className="font-heading text-xl font-semibold text-[#3d3d5c] mb-2.5">
+                Budgets that remember last month
+              </h3>
+              <p className="text-[14.5px] text-[#6b6b88] leading-[1.65]">
+                Come in under budget and the leftover rolls into next period
+                automatically. Go over, and next period tightens to match. No
+                manual math either way.
               </p>
             </motion.div>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              {[
-                {
-                  icon: PieChart,
-                  title: "Smart Budgeting",
-                  description: "Set budgets for categories and track your progress throughout the month."
-                },
-                {
-                  icon: Shield,
-                  title: "Secure & Private",
-                  description: "Your financial data is encrypted and secure. We never sell your data."
-                },
-                {
-                  icon: Smartphone,
-                  title: "Works Everywhere",
-                  description: "Install Oreo as a PWA on your phone or use it seamlessly on the web."
-                }
-              ].map((feature, i) => (
-                <motion.div 
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.5, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                  className="flex flex-col items-center text-center p-8 rounded-2xl bg-card border border-border shadow-oreo-sm hover:shadow-oreo-md hover:-translate-y-1 transition-all duration-300"
-                >
-                  <div className="h-14 w-14 rounded-full bg-oreo-lavender/50 text-oreo-slate-purple flex items-center justify-center mb-6">
-                    <feature.icon className="h-6 w-6" />
-                  </div>
-                  <h3 className="font-heading text-xl font-semibold mb-3 text-foreground">{feature.title}</h3>
-                  <p className="text-muted-foreground">
-                    <PawPrint className="w-4 h-4 inline-block mr-2 text-oreo-slate-purple/50" />
-                    {feature.description}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
+
+            {/* Receipt: Multi-currency */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{
+                duration: 0.6,
+                ease: [0.22, 1, 0.36, 1],
+                delay: 0.1,
+              }}
+              className="relative bg-[#fbfbff] rounded-t-[18px] rounded-b-none px-7 pt-[30px] pb-[34px] shadow-[0_16px_36px_-18px_rgba(61,61,92,0.24)]"
+            >
+              <div
+                className="absolute left-0 right-0 bottom-[-9px] h-[18px]"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(135deg, #f5f6ff 50%, transparent 50%), linear-gradient(45deg, #f5f6ff 50%, transparent 50%)",
+                  backgroundSize: "18px 18px",
+                  backgroundRepeat: "repeat-x",
+                }}
+              />
+              <div className="w-[34px] h-1 rounded-[3px] bg-[#a76571] mb-[18px]" />
+              <h3 className="font-heading text-xl font-semibold text-[#3d3d5c] mb-2.5">
+                Multi-currency without the mental math
+              </h3>
+              <p className="text-[14.5px] text-[#6b6b88] leading-[1.65]">
+                Got paid in a currency your account doesn&apos;t use? Enter it
+                as-is. Oreo converts it at the day&apos;s rate and shows you
+                both numbers.
+              </p>
+            </motion.div>
           </div>
-        </section>
-        
-        {/* Final CTA */}
-        <section className="relative z-10 w-full py-32 px-6 bg-gradient-to-b from-background to-oreo-lavender/20 flex flex-col items-center text-center space-y-8">
+
+          {/* Right — tall receipt */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{
+              duration: 0.6,
+              ease: [0.22, 1, 0.36, 1],
+              delay: 0.15,
+            }}
+            className="relative bg-[#fbfbff] rounded-t-[18px] rounded-b-none px-7 pt-[30px] pb-[34px] shadow-[0_16px_36px_-18px_rgba(61,61,92,0.24)] min-h-full flex flex-col"
+          >
+            <div
+              className="absolute left-0 right-0 bottom-[-9px] h-[18px]"
+              style={{
+                backgroundImage:
+                  "linear-gradient(135deg, #f5f6ff 50%, transparent 50%), linear-gradient(45deg, #f5f6ff 50%, transparent 50%)",
+                backgroundSize: "18px 18px",
+                backgroundRepeat: "repeat-x",
+              }}
+            />
+            <div className="w-[34px] h-1 rounded-[3px] bg-[#5f8f8a] mb-[18px]" />
+            <h3 className="font-heading text-xl font-semibold text-[#3d3d5c] mb-2.5">
+              Install it. Forget it&apos;s a website.
+            </h3>
+            <p className="text-[14.5px] text-[#6b6b88] leading-[1.65]">
+              Add Oreo to your home screen on any phone or desktop. Same ledger,
+              same budgets, no app store.
+            </p>
+            <div className="font-mono text-[30px] font-bold text-[#3d3d5c] mt-3.5 mb-1">
+              2 taps
+            </div>
+            <p className="text-[12.5px] text-[#9c9cb8]">
+              from browser to home screen
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ════════════════════════ WARM NOTE ════════════════════════ */}
+      <section className="max-w-[720px] mx-auto px-7 pb-[100px] text-center">
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="text-[17px] leading-[1.7] text-[#5b5b78]"
+        >
+          Oreo is designed to feel like a{" "}
+          <strong className="text-[#3d3d5c] font-semibold">
+            warm, competent friend
+          </strong>{" "}
+          helping you track money. Soft on the outside, serious about the
+          numbers on the inside. The kind of app you actually want to open
+          every day.
+        </motion.p>
+      </section>
+
+      {/* ════════════════════════ FINAL CTA ════════════════════════ */}
+      <section
+        className="relative px-7 pt-[100px] pb-[120px] text-center"
+        style={{
+          background:
+            "linear-gradient(180deg, #f5f6ff, #d8dcff 120%)",
+        }}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 24 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="flex flex-col items-center"
+        >
           <Image
             src="/oreo.svg"
             alt="Oreo Mascot"
-            width={80}
-            height={80}
-            className="w-20 h-20 drop-shadow-md mb-4"
+            width={76}
+            height={76}
+            className="w-[76px] h-[76px] mb-[22px]"
             style={{ imageRendering: "pixelated" }}
           />
-          <h2 className="font-heading text-4xl font-bold text-oreo-slate-purple">Ready to meet Oreo?</h2>
-          <Link href={isLoggedIn ? "/dashboard" : "/login"} className={showCustomCursor ? "cursor-none" : ""}>
-            <Button 
-              size="lg" 
-              onClick={handleConfetti}
-              className={`h-14 px-10 text-lg font-medium shadow-oreo-sm hover:-translate-y-0.5 hover:shadow-oreo-md transition-all ${showCustomCursor ? "cursor-none" : ""}`}
-            >
-              {isLoggedIn ? "Go to Dashboard" : "Start Tracking Free"}
-            </Button>
+          <h2 className="font-heading text-[38px] font-semibold text-[#3d3d5c] mb-7">
+            Ready to meet Oreo?
+          </h2>
+          <Link href={ctaHref}>
+            <button className="inline-flex items-center gap-2 px-8 py-[15px] rounded-[11px] font-semibold text-base bg-[#3d3d5c] text-white border-none cursor-pointer shadow-[0_6px_18px_rgba(61,61,92,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(61,61,92,0.34)] active:scale-[0.97]">
+              {ctaLabel}
+            </button>
           </Link>
-        </section>
-      </main>
+        </motion.div>
+      </section>
 
-      <footer className="w-full py-8 text-center text-sm text-muted-foreground border-t border-border/50 relative z-10 bg-background">
-        <p className="flex items-center justify-center gap-1">
-          © {new Date().getFullYear()} Oreo Finance. Built with <Heart className="w-4 h-4 text-rose-500 fill-current" /> for a cat named Oreo.
+      {/* ════════════════════════ FOOTER ════════════════════════ */}
+      <footer className="py-9 text-center text-[13px] text-[#8888a6] border-t border-[rgba(86,86,118,0.08)]">
+        <p className="flex items-center justify-center gap-1.5">
+          © {new Date().getFullYear()} Oreo Finance. A personal project.
+          {!isLoggedIn && (
+            <Link
+              href="/login"
+              className="text-inherit hover:text-[#565676] transition-colors ml-2"
+            >
+              Log in
+            </Link>
+          )}
         </p>
       </footer>
     </div>
