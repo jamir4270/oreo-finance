@@ -18,7 +18,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { convertCurrency } from "@/lib/currency";
+import { convertCurrency, CURRENCIES } from "@/lib/currency";
 
 export type TxnAccountData = { id: string; name: string; currency: string };
 export type TxnCategoryData = { id: string; name: string; icon: string; txn_type: string };
@@ -36,6 +36,8 @@ export type TransactionData = {
   to_amount?: number | null;
   exchange_rate?: number | null;
   to_account?: { name: string; currency: string };
+  original_amount?: number | null;
+  original_currency?: string | null;
 };
 
 interface TransactionDialogProps {
@@ -76,9 +78,10 @@ export function TransactionDialog({
   const isEdit = !!transaction;
 
   const [type, setType] = React.useState<string>(transaction?.type || "expense");
-  const [amountStr, setAmountStr] = React.useState<string>(transaction?.amount?.toString() || "");
+  const [amountStr, setAmountStr] = React.useState<string>(transaction?.original_amount?.toString() || transaction?.amount?.toString() || "");
   const [accountId, setAccountId] = React.useState<string>(transaction?.account_id || (accounts[0]?.id || ""));
   const [toAccountId, setToAccountId] = React.useState<string>(transaction?.to_account_id || "");
+  const [inputCurrency, setInputCurrency] = React.useState<string>(transaction?.original_currency || accounts.find(a => a.id === (transaction?.account_id || accounts[0]?.id))?.currency || "USD");
 
   const actionWithId = transaction ? updateTransaction.bind(null, transaction.id) : createTransaction;
   const [state, formAction] = useActionState(actionWithId, null);
@@ -104,14 +107,18 @@ export function TransactionDialog({
   React.useEffect(() => {
     if (open && transaction) {
       setType(transaction.type);
-      setAmountStr(transaction.amount.toString());
       setAccountId(transaction.account_id);
       setToAccountId(transaction.to_account_id || "");
+      
+      const acc = accounts.find(a => a.id === transaction.account_id);
+      setInputCurrency(transaction.original_currency || acc?.currency || accounts[0]?.currency || "USD");
+      setAmountStr(transaction.original_amount?.toString() || transaction.amount.toString());
     } else if (open && !transaction) {
       setType("expense");
-      setAmountStr("");
       setAccountId(accounts[0]?.id || "");
       setToAccountId("");
+      setInputCurrency(accounts[0]?.currency || "USD");
+      setAmountStr("");
     }
   }, [open, transaction, accounts]);
 
@@ -132,6 +139,14 @@ export function TransactionDialog({
         convertedAmountStr = `≈ ${to_amount.toFixed(2)} ${destAccount.currency}`;
         exchangeRateStr = `1 ${sourceAccount.currency} = ${rate.toFixed(4)} ${destAccount.currency}`;
       }
+    }
+  } else if (type !== "transfer" && sourceAccount && exchangeRates && inputCurrency !== sourceAccount.currency) {
+    const amount = parseFloat(amountStr);
+    if (!isNaN(amount) && amount > 0) {
+      const to_amount = convertCurrency(amount, inputCurrency, sourceAccount.currency, exchangeRates);
+      const rate = exchangeRates[sourceAccount.currency] / exchangeRates[inputCurrency];
+      convertedAmountStr = `≈ ${to_amount.toFixed(2)} ${sourceAccount.currency}`;
+      exchangeRateStr = `1 ${inputCurrency} = ${rate.toFixed(4)} ${sourceAccount.currency}`;
     }
   }
 
@@ -166,18 +181,34 @@ export function TransactionDialog({
           </Tabs>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="amount">Amount</Label>
-            <Input
-              id="amount"
-              name="amount"
-              type="number"
-              step="0.01"
-              min="0.01"
-              placeholder="0.00"
-              value={amountStr}
-              onChange={(e) => setAmountStr(e.target.value)}
-              required
-            />
+            <Label htmlFor="input_amount">Amount</Label>
+            <div className="flex gap-2">
+              <select
+                id="input_currency"
+                name="input_currency"
+                value={inputCurrency}
+                onChange={(e) => setInputCurrency(e.target.value)}
+                className="flex h-10 w-[76px] rounded-md border border-input bg-background px-2 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {CURRENCIES.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.code}
+                  </option>
+                ))}
+              </select>
+              <Input
+                id="input_amount"
+                name="input_amount"
+                type="number"
+                step="0.01"
+                min="0.01"
+                placeholder="0.00"
+                value={amountStr}
+                onChange={(e) => setAmountStr(e.target.value)}
+                required
+                className="flex-1 h-10"
+              />
+            </div>
           </div>
 
           <div className={`grid ${type === 'transfer' ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-4'}`}>
