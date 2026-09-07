@@ -20,10 +20,7 @@ export default function ErrorPage({
   return (
     <div className="flex h-screen w-full items-center justify-center p-4">
       <Card
-        className="w-full max-w-md border-0"
-        style={{
-          boxShadow: "0 4px 24px rgba(86, 86, 118, 0.08), 0 1px 4px rgba(86, 86, 118, 0.04)",
-        }}
+        className="w-full max-w-md border-0 shadow-oreo-md"
       >
         <CardContent className="flex flex-col items-center gap-6 pt-10 pb-10 text-center">
           <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-oreo-mauve/20">

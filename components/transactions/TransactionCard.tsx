@@ -32,24 +32,24 @@ export function TransactionCard({ transaction, onClick }: TransactionCardProps) 
   return (
     <div 
       onClick={() => onClick(transaction)}
-      className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:shadow-md cursor-pointer hover:border-muted-foreground/30 active:scale-[0.98]"
+      className="flex items-center justify-between rounded-xl border border-border bg-card py-2.5 px-3 shadow-sm transition-all hover:shadow-oreo-sm cursor-pointer hover:border-muted-foreground/30 active:scale-[0.98]"
       role="button"
       tabIndex={0}
     >
-      <div className="flex items-center gap-4 overflow-hidden">
+      <div className="flex items-center gap-3 overflow-hidden">
         {/* Category Icon */}
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-oreo-lavender/50 text-oreo-slate-purple">
-          <Icon className="h-5 w-5" />
+        <div className="flex shrink-0 items-center justify-center text-oreo-slate-purple">
+          <Icon className="h-4 w-4" />
         </div>
 
         {/* Details */}
         <div className="flex flex-col overflow-hidden">
           <div className="flex items-center gap-2">
-            <h3 className="font-heading text-base font-medium text-foreground truncate">
+            <h3 className="font-heading text-sm font-medium text-foreground truncate">
               {transaction.category?.name || "Uncategorized"}
             </h3>
           </div>
-          <div className="text-xs text-muted-foreground flex items-center gap-1 overflow-hidden whitespace-nowrap">
+          <div className="text-[11px] text-muted-foreground flex items-center gap-1 overflow-hidden whitespace-nowrap">
             <span className="shrink-0">
               {transaction.account?.name || "Unknown Account"}
               {isTransfer && transaction.to_account?.name && ` → ${transaction.to_account.name}`}
@@ -57,7 +57,7 @@ export function TransactionCard({ transaction, onClick }: TransactionCardProps) 
             {transaction.note && (
               <>
                 <span className="shrink-0">•</span>
-                <span>{transaction.note.length > 20 ? `${transaction.note.substring(0, 20)}...` : transaction.note}</span>
+                <span className="truncate">{transaction.note}</span>
               </>
             )}
           </div>
@@ -66,10 +66,10 @@ export function TransactionCard({ transaction, onClick }: TransactionCardProps) 
       
       <div className="flex items-center gap-3 shrink-0 ml-4">
         {/* Amount */}
-        <div className={cn("font-mono text-base font-semibold", amountColor)}>
+        <div className={cn("font-mono text-sm font-semibold", amountColor)}>
           {prefix}{transaction.amount.toFixed(2)}
           {transaction.account?.currency && (
-            <span className="ml-1 text-xs font-medium text-muted-foreground font-sans">
+            <span className="ml-1 text-[10px] font-medium text-muted-foreground font-sans">
               {transaction.account.currency}
             </span>
           )}

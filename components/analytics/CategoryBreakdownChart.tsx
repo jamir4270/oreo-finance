@@ -50,12 +50,11 @@ export function CategoryBreakdownChart({
 
   // Generate color palette based on oreo colors (mainly mauve and rose for expenses)
   const COLORS = [
-    "var(--color-oreo-mauve)",
-    "var(--color-oreo-dusty-rose)",
-    "var(--color-oreo-periwinkle)",
-    "var(--color-oreo-slate-purple)",
-    "var(--color-oreo-lavender)",
-    "var(--color-oreo-dusty-teal)", 
+    "var(--chart-1)",
+    "var(--chart-2)",
+    "var(--chart-3)",
+    "var(--chart-4)",
+    "var(--chart-5)",
   ];
 
   const currencySymbol = getCurrencySymbol(baseCurrency);
@@ -90,7 +89,7 @@ export function CategoryBreakdownChart({
   };
 
   return (
-    <Card className="flex flex-col h-full border-0 shadow-sm" style={{ boxShadow: "0 4px 24px rgba(86, 86, 118, 0.06), 0 1px 4px rgba(86, 86, 118, 0.03)" }}>
+    <Card className="flex flex-col h-full border-0 shadow-oreo-md">
       <CardHeader className="pb-4">
         <CardTitle className="font-heading text-2xl text-oreo-slate-purple">Spending by Category</CardTitle>
         <CardDescription className="text-sm">Breakdown of expenses for selected period</CardDescription>

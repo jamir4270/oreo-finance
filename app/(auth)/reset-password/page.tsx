@@ -19,13 +19,7 @@ export default function ResetPasswordPage() {
   if (state?.success) {
     return (
       <div className="flex w-full flex-col gap-4">
-        <Card
-          className="border-0"
-          style={{
-            boxShadow:
-              "0 4px 24px rgba(86, 86, 118, 0.08), 0 1px 4px rgba(86, 86, 118, 0.04)",
-          }}
-        >
+        <Card className="border-0 shadow-oreo-md">
           <CardContent className="flex flex-col items-center gap-4 pt-8 pb-8 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-oreo-dusty-teal/10">
               <MailCheck className="h-8 w-8 text-oreo-dusty-teal" />
@@ -61,13 +55,7 @@ export default function ResetPasswordPage() {
         </p>
       </div>
 
-      <Card
-        className="border-0"
-        style={{
-          boxShadow:
-            "0 4px 24px rgba(86, 86, 118, 0.08), 0 1px 4px rgba(86, 86, 118, 0.04)",
-        }}
-      >
+      <Card className="border-0 shadow-oreo-md">
         <form action={formAction}>
           <CardContent className="flex flex-col gap-4 pt-6">
             {/* Error message */}
