@@ -38,8 +38,15 @@ export default async function AppLayout({
     .eq("user_id", user.id)
     .order("name");
 
+  const today = new Date().toISOString().split('T')[0];
+  const { count: dailyTxnCount } = await supabase
+    .from("transactions")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("txn_date", today);
+
   return (
-    <AppShell accounts={accounts || []} categories={categories || []}>
+    <AppShell accounts={accounts || []} categories={categories || []} dailyTxnCount={dailyTxnCount || 0}>
       {children}
     </AppShell>
   );

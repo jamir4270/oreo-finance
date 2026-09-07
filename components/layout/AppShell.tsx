@@ -10,9 +10,10 @@ interface AppShellProps {
   children: React.ReactNode;
   accounts: TxnAccountData[];
   categories: TxnCategoryData[];
+  dailyTxnCount?: number;
 }
 
-export function AppShell({ children, accounts, categories }: AppShellProps) {
+export function AppShell({ children, accounts, categories, dailyTxnCount }: AppShellProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const handleOpenAddModal = () => setIsAddModalOpen(true);
@@ -24,7 +25,7 @@ export function AppShell({ children, accounts, categories }: AppShellProps) {
 
       {/* Main Content Area */}
       <main className="flex flex-1 flex-col overflow-y-auto pb-16 lg:pb-0">
-        <MobileTopBar />
+        <MobileTopBar dailyTxnCount={dailyTxnCount} />
         {children}
       </main>
 

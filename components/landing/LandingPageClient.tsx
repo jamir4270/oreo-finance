@@ -4,13 +4,13 @@ import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ShoppingCart, Wallet, Plane, Utensils, Car } from "lucide-react";
 import { motion, useScroll, useTransform, useReducedMotion } from "motion/react";
 
 /* ─── Ledger row data (USD) ─── */
 const LEDGER_ROWS = [
   {
-    emoji: "🛒",
+    icon: ShoppingCart,
     dotBg: "#fbe3e6",
     name: "Groceries",
     sub: "Today · Cash",
@@ -18,7 +18,7 @@ const LEDGER_ROWS = [
     type: "expense" as const,
   },
   {
-    emoji: "💰",
+    icon: Wallet,
     dotBg: "#dff2ef",
     name: "Salary",
     sub: "Yesterday · Bank",
@@ -26,7 +26,7 @@ const LEDGER_ROWS = [
     type: "income" as const,
   },
   {
-    emoji: "✈️",
+    icon: Plane,
     dotBg: "#eceafd",
     name: "Hotel, Tokyo",
     sub: "Jun 2 · converted from ¥18,400",
@@ -153,15 +153,7 @@ export function LandingPageClient({ isLoggedIn }: { isLoggedIn: boolean }) {
 
       {/* ════════════════════════ HERO ════════════════════════ */}
       <section className="relative">
-        {/* Blob */}
-        <div
-          className="absolute top-[-140px] right-[-160px] w-[520px] h-[520px] rounded-full opacity-55 pointer-events-none z-0"
-          style={{
-            background:
-              "radial-gradient(circle at 35% 35%, #aeadf0, transparent 70%)",
-            filter: "blur(10px)",
-          }}
-        />
+        {/* Removed Blob per design audit */}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-14 items-center max-w-[1120px] mx-auto px-7 pt-16 pb-10">
           {/* Left copy */}
@@ -198,10 +190,8 @@ export function LandingPageClient({ isLoggedIn }: { isLoggedIn: boolean }) {
           >
             <div
               ref={frameRef}
-              className="bg-[#fbfbff] rounded-[20px] overflow-hidden relative"
+              className="bg-[#fbfbff] rounded-[20px] overflow-hidden relative shadow-oreo-lg"
               style={{
-                boxShadow:
-                  "0 30px 70px -20px rgba(61,61,92,0.35), 0 10px 24px -8px rgba(61,61,92,0.18)",
                 transform: `rotateY(${frameTilt.rY}deg) rotateX(${frameTilt.rX}deg) rotate(-1.5deg)`,
                 transition: "transform 0.4s cubic-bezier(0.22,1,0.36,1)",
               }}
@@ -213,10 +203,8 @@ export function LandingPageClient({ isLoggedIn }: { isLoggedIn: boolean }) {
               />
 
               {/* Browser chrome */}
-              <div className="flex items-center gap-1.5 px-4 py-3 bg-[#eeeffb] border-b border-[rgba(86,86,118,0.08)]">
-                <span className="w-[9px] h-[9px] rounded-full bg-[#d6d6ea]" />
-                <span className="w-[9px] h-[9px] rounded-full bg-[#d6d6ea]" />
-                <span className="w-[9px] h-[9px] rounded-full bg-[#d6d6ea]" />
+              <div className="flex items-center justify-center px-4 py-2 bg-[#fbfbff] border-b border-[#e2e2f2]">
+                <span className="font-heading text-xs font-semibold text-[#565676]">Oreo</span>
               </div>
 
               {/* App body */}
@@ -248,7 +236,7 @@ export function LandingPageClient({ isLoggedIn }: { isLoggedIn: boolean }) {
                         className="w-[30px] h-[30px] rounded-full flex items-center justify-center text-sm"
                         style={{ background: row.dotBg }}
                       >
-                        {row.emoji}
+                        <row.icon className="w-3.5 h-3.5 text-[#3d3d5c]" />
                       </div>
                       <div>
                         <div className="text-[13.5px] font-medium text-[#3d3d5c]">
@@ -315,9 +303,7 @@ export function LandingPageClient({ isLoggedIn }: { isLoggedIn: boolean }) {
             }}
             className="pt-1.5"
           >
-            <span className="inline-block font-mono font-bold text-sm text-[#565676] bg-[#d8dcff] px-2.5 py-1 rounded-lg mb-[18px]">
-              01
-            </span>
+
             <h3 className="font-heading text-[19px] font-semibold text-[#3d3d5c] mb-2">
               Log it
             </h3>
@@ -351,9 +337,7 @@ export function LandingPageClient({ isLoggedIn }: { isLoggedIn: boolean }) {
             }}
             className="pt-1.5"
           >
-            <span className="inline-block font-mono font-bold text-sm text-[#565676] bg-[#d8dcff] px-2.5 py-1 rounded-lg mb-[18px]">
-              02
-            </span>
+
             <h3 className="font-heading text-[19px] font-semibold text-[#3d3d5c] mb-2">
               Categorize
             </h3>
@@ -362,13 +346,13 @@ export function LandingPageClient({ isLoggedIn }: { isLoggedIn: boolean }) {
             </p>
             <div className="bg-[#fbfbff] rounded-[14px] p-3.5 shadow-[0_10px_26px_-12px_rgba(61,61,92,0.22)]">
               <div className="flex items-center justify-between py-[7px] text-[12.5px]">
-                <span>🍜 Dining</span>
+                <span className="flex items-center gap-1"><Utensils className="w-3.5 h-3.5" /> Dining</span>
                 <span className="text-[11px] font-semibold bg-[#d8dcff] text-[#565676] px-2 py-[3px] rounded-full">
                   Expense
                 </span>
               </div>
               <div className="flex items-center justify-between py-[7px] text-[12.5px] border-t border-dashed border-[#e2e2f2]">
-                <span>🚕 Transport</span>
+                <span className="flex items-center gap-1"><Car className="w-3.5 h-3.5" /> Transport</span>
                 <span className="text-[11px] font-semibold bg-[#d8dcff] text-[#565676] px-2 py-[3px] rounded-full">
                   Expense
                 </span>
@@ -388,9 +372,7 @@ export function LandingPageClient({ isLoggedIn }: { isLoggedIn: boolean }) {
             }}
             className="pt-1.5"
           >
-            <span className="inline-block font-mono font-bold text-sm text-[#565676] bg-[#d8dcff] px-2.5 py-1 rounded-lg mb-[18px]">
-              03
-            </span>
+
             <h3 className="font-heading text-[19px] font-semibold text-[#3d3d5c] mb-2">
               Watch it roll up
             </h3>

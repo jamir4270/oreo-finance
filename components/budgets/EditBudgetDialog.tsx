@@ -7,13 +7,7 @@ import { updateBudget } from "@/app/actions/budgets";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { BudgetCardData } from "./BudgetCard";
 import { toast } from "sonner";
 
@@ -62,16 +56,13 @@ export function EditBudgetDialog({
   const currencySymbol = getCurrencySymbol(budget.currency || baseCurrency);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Edit Budget</DialogTitle>
-          <DialogDescription>
-            Changes take effect from the current period forward.
-          </DialogDescription>
-        </DialogHeader>
-
-        <form key={budget.id} action={formAction} className="flex flex-col gap-4 mt-2">
+    <ResponsiveSheet 
+      open={open} 
+      onOpenChange={onOpenChange}
+      title="Edit Budget"
+      description="Changes take effect from the current period forward."
+    >
+      <form key={budget.id} action={formAction} className="flex flex-col gap-4">
           {/* Category (read-only) */}
           <div className="flex flex-col gap-2">
             <Label>Category</Label>
@@ -149,7 +140,6 @@ export function EditBudgetDialog({
 
           <SubmitButton />
         </form>
-      </DialogContent>
-    </Dialog>
+    </ResponsiveSheet>
   );
 }

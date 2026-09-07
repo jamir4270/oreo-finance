@@ -7,14 +7,7 @@ import { createBudget } from "@/app/actions/budgets";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { toast } from "sonner";
 
 export type BudgetCategoryData = {
@@ -81,17 +74,14 @@ export function CreateBudgetDialog({
   const currencySymbol = getCurrencySymbol(baseCurrency);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      {trigger && <DialogTrigger render={trigger} />}
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Create Budget</DialogTitle>
-          <DialogDescription>
-            Set a spending limit for a category.
-          </DialogDescription>
-        </DialogHeader>
-
-        <form key="create-budget" action={formAction} className="flex flex-col gap-4 mt-2">
+    <ResponsiveSheet 
+      open={open} 
+      onOpenChange={setOpen}
+      trigger={trigger}
+      title="Create Budget"
+      description="Set a spending limit for a category."
+    >
+      <form key="create-budget" action={formAction} className="flex flex-col gap-4">
           {/* Category */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="category_id">Category</Label>
@@ -178,7 +168,6 @@ export function CreateBudgetDialog({
 
           <SubmitButton />
         </form>
-      </DialogContent>
-    </Dialog>
+    </ResponsiveSheet>
   );
 }
