@@ -24,6 +24,9 @@ export interface BudgetCardData {
     actual_spent: number;
   } | null;
   computedSpent: number;
+  convertedLimitAmount: number;
+  convertedEffectiveLimit: number;
+  convertedRolloverIn: number;
 }
 
 interface BudgetCardProps {
@@ -36,9 +39,9 @@ export function BudgetCard({ budget, baseCurrency, onClick }: BudgetCardProps) {
   const iconName = budget.category?.icon || "Tag";
   const Icon = (LucideIcons as any)[iconName] || LucideIcons.Tag;
 
-  const effectiveLimit = budget.currentPeriod?.effective_limit ?? budget.limit_amount;
+  const effectiveLimit = budget.convertedEffectiveLimit;
   const spent = budget.computedSpent;
-  const rolloverIn = budget.currentPeriod?.rollover_in ?? 0;
+  const rolloverIn = budget.convertedRolloverIn;
 
   const isOverBudget = spent > effectiveLimit;
   const remaining = effectiveLimit - spent;

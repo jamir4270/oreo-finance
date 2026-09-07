@@ -38,9 +38,9 @@ export function BudgetDetailDialog({
   const Icon = (LucideIcons as any)[iconName] || LucideIcons.Tag;
 
   const period = budget.currentPeriod;
-  const effectiveLimit = period?.effective_limit ?? budget.limit_amount;
+  const effectiveLimit = budget.convertedEffectiveLimit;
   const spent = budget.computedSpent;
-  const rolloverIn = period?.rollover_in ?? 0;
+  const rolloverIn = budget.convertedRolloverIn;
   const remaining = effectiveLimit - spent;
   const isOverBudget = spent > effectiveLimit;
 
@@ -94,7 +94,7 @@ export function BudgetDetailDialog({
             <div className="flex flex-col min-w-0 flex-1">
               <span className="text-sm font-medium text-foreground">Base Limit</span>
               <span className="text-sm font-mono text-muted-foreground">
-                {currencySymbol}{budget.limit_amount.toFixed(2)}
+                {currencySymbol}{budget.convertedLimitAmount.toFixed(2)}
               </span>
             </div>
           </div>
