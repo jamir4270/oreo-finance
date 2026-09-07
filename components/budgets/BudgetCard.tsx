@@ -99,10 +99,10 @@ export function BudgetCard({ budget, baseCurrency, onClick }: BudgetCardProps) {
       </div>
 
       {/* Progress bar */}
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5 mt-2">
         <TooltipProvider delay={200}>
           <Tooltip>
-            <TooltipTrigger render={<div className="relative h-3 w-full overflow-hidden rounded-full bg-muted/60 cursor-help" />}>
+            <TooltipTrigger render={<div className="relative h-3 w-full rounded-full bg-muted/60 cursor-help" />}>
                 <div
                   className={cn(
                     "h-full rounded-full transition-all duration-500 ease-out",
@@ -113,7 +113,10 @@ export function BudgetCard({ budget, baseCurrency, onClick }: BudgetCardProps) {
                   style={{ width: `${isOverBudget ? 100 : progressPercent}%` }}
                 />
                 {/* 80% Threshold marker */}
-                <div className="absolute top-0 bottom-0 left-[80%] w-[2px] bg-background/50 z-10" />
+                <div className="absolute -top-1 -bottom-1 left-[80%] w-[3px] bg-oreo-slate-purple/80 z-10 rounded-full" />
+                <span className="absolute -top-5 left-[80%] -translate-x-1/2 text-[10px] font-bold text-oreo-slate-purple/80">
+                  80%
+                </span>
             </TooltipTrigger>
             <TooltipContent side="top" className="p-3 max-w-[200px] flex flex-col gap-2">
               <div className="text-sm font-medium">
