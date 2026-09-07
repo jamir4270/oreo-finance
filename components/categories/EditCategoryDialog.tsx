@@ -7,13 +7,7 @@ import { updateCategory } from "@/app/actions/categories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { IconPicker } from "@/components/ui/icon-picker";
 import { Lock } from "lucide-react";
 import { toast } from "sonner";
@@ -67,15 +61,13 @@ export function EditCategoryDialog({ category, open, onOpenChange }: EditCategor
   if (!category) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Edit Category</DialogTitle>
-          <DialogDescription>
-            Update the details of your category.
-          </DialogDescription>
-        </DialogHeader>
-        <form key={category.id} action={formAction} className="flex flex-col gap-4 mt-4">
+    <ResponsiveSheet 
+      open={open} 
+      onOpenChange={onOpenChange}
+      title="Edit Category"
+      description="Update the details of your category."
+    >
+      <form key={category.id} action={formAction} className="flex flex-col gap-4">
           <input type="hidden" name="icon" value={icon} />
 
           <div className="flex flex-col gap-2">
@@ -105,7 +97,6 @@ export function EditCategoryDialog({ category, open, onOpenChange }: EditCategor
 
           <SubmitButton />
         </form>
-      </DialogContent>
-    </Dialog>
+    </ResponsiveSheet>
   );
 }

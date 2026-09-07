@@ -6,14 +6,7 @@ import { createAccount } from "@/app/actions/accounts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { IconPicker } from "@/components/ui/icon-picker";
 import { toast } from "sonner";
 
@@ -53,18 +46,14 @@ export function CreateAccountDialog({ baseCurrency }: CreateAccountDialogProps) 
   }, [state]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={
-        <Button>Add Account</Button>
-      } />
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Create Account</DialogTitle>
-          <DialogDescription>
-            Add a new financial account to track your balances.
-          </DialogDescription>
-        </DialogHeader>
-        <form action={formAction} className="flex flex-col gap-4 mt-4">
+    <ResponsiveSheet 
+      open={open} 
+      onOpenChange={setOpen}
+      trigger={<Button>Add Account</Button>}
+      title="Create Account"
+      description="Add a new financial account to track your balances."
+    >
+      <form action={formAction} className="flex flex-col gap-4">
           <input type="hidden" name="icon" value={icon} />
 
           <div className="flex flex-col gap-2">
@@ -128,7 +117,6 @@ export function CreateAccountDialog({ baseCurrency }: CreateAccountDialogProps) 
 
           <SubmitButton />
         </form>
-      </DialogContent>
-    </Dialog>
+    </ResponsiveSheet>
   );
 }

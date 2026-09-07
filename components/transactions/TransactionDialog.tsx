@@ -9,16 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { convertCurrency, CURRENCIES } from "@/lib/currency";
+import { cn } from "@/lib/utils";
 
 export type TxnAccountData = { id: string; name: string; currency: string };
 export type TxnCategoryData = { id: string; name: string; icon: string; txn_type: string };
@@ -151,34 +145,47 @@ export function TransactionDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      {trigger && <DialogTrigger render={trigger} />}
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Transaction" : "Log Transaction"}</DialogTitle>
-          <DialogDescription>
-            {isEdit ? "Update the details of your transaction." : "Add a new expense, income or transfer."}
-          </DialogDescription>
-        </DialogHeader>
-
-        <form key={transaction?.id || "new"} action={formAction} className="flex flex-col gap-4 mt-2">
-          {/* Type Selector Tabs */}
-          <Tabs value={type} onValueChange={setType} className="w-full">
+    <ResponsiveSheet 
+      open={open} 
+      onOpenChange={setOpen}
+      trigger={trigger}
+      title={isEdit ? "Edit Transaction" : "Log Transaction"}
+      description={isEdit ? "Update the details of your transaction." : "Add a new expense, income or transfer."}
+    >
+      <form key={transaction?.id || "new"} action={formAction} className="flex flex-col gap-4 mt-2">
+          {/* Type Selector Tiles */}
+          <div className="w-full">
             {isEdit ? (
-              <TabsList className="grid w-full grid-cols-1">
-                <TabsTrigger value={type} disabled className="capitalize opacity-100 cursor-default">
-                  {type}
-                </TabsTrigger>
-              </TabsList>
+              <div className="flex w-full items-center justify-center p-3 rounded-xl border border-border bg-muted/30">
+                <span className="font-medium capitalize text-foreground">{type}</span>
+              </div>
             ) : (
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="expense">Expense</TabsTrigger>
-                <TabsTrigger value="income">Income</TabsTrigger>
-                <TabsTrigger value="transfer">Transfer</TabsTrigger>
-              </TabsList>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setType('expense')}
+                  className={cn("flex flex-col items-center justify-center py-3 rounded-xl border transition-all text-sm font-medium", type === 'expense' ? "border-[#fbe3e6] bg-[#fbe3e6]/40 text-[#a76571] shadow-sm" : "border-border bg-card text-muted-foreground hover:bg-muted/50")}
+                >
+                  Expense
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setType('income')}
+                  className={cn("flex flex-col items-center justify-center py-3 rounded-xl border transition-all text-sm font-medium", type === 'income' ? "border-[#dff2ef] bg-[#dff2ef]/50 text-[#5f8f8a] shadow-sm" : "border-border bg-card text-muted-foreground hover:bg-muted/50")}
+                >
+                  Income
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setType('transfer')}
+                  className={cn("flex flex-col items-center justify-center py-3 rounded-xl border transition-all text-sm font-medium", type === 'transfer' ? "border-oreo-lavender bg-oreo-lavender/30 text-oreo-slate-purple shadow-sm" : "border-border bg-card text-muted-foreground hover:bg-muted/50")}
+                >
+                  Transfer
+                </button>
+              </div>
             )}
             <input type="hidden" name="type" value={type} />
-          </Tabs>
+          </div>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="input_amount">Amount</Label>
@@ -331,7 +338,6 @@ export function TransactionDialog({
 
           <SubmitButton isEdit={isEdit} />
         </form>
-      </DialogContent>
-    </Dialog>
+    </ResponsiveSheet>
   );
 }
