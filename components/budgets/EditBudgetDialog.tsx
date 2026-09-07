@@ -59,7 +59,7 @@ export function EditBudgetDialog({
     }
   }, [open, budget.period_type]);
 
-  const currencySymbol = getCurrencySymbol(baseCurrency);
+  const currencySymbol = getCurrencySymbol(budget.currency || baseCurrency);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

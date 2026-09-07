@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { BudgetsPageClient } from "@/components/budgets/BudgetsPageClient";
 import { getExchangeRates } from "@/lib/exchange-rates";
 import { ensureCurrentPeriod, computeActualSpent } from "@/lib/budget-periods";
+import { convertCurrency } from "@/lib/currency";
 import { BudgetCardData } from "@/components/budgets/BudgetCard";
 
 export default async function BudgetsPage() {
@@ -82,6 +83,16 @@ export default async function BudgetsPage() {
       const currentPeriod = currentPeriods[i];
       const computedSpent = currentPeriod ? (spentMap.get(budget.category_id) || 0) : 0;
 
+      const budgetCurrency = budget.currency || baseCurrency;
+      const convertedLimitAmount = convertCurrency(budget.limit_amount, budgetCurrency, baseCurrency, rates);
+      let convertedEffectiveLimit = convertedLimitAmount;
+      let convertedRolloverIn = 0;
+
+      if (currentPeriod) {
+        convertedEffectiveLimit = convertCurrency(currentPeriod.effective_limit, budgetCurrency, baseCurrency, rates);
+        convertedRolloverIn = convertCurrency(currentPeriod.rollover_in, budgetCurrency, baseCurrency, rates);
+      }
+
       enrichedBudgets.push({
         id: budget.id,
         category_id: budget.category_id,
@@ -89,10 +100,13 @@ export default async function BudgetsPage() {
         period_type: budget.period_type,
         start_date: budget.start_date,
         end_date: budget.end_date,
-        currency: budget.currency || baseCurrency,
+        currency: budgetCurrency,
         category: budget.category,
         currentPeriod,
         computedSpent,
+        convertedLimitAmount,
+        convertedEffectiveLimit,
+        convertedRolloverIn,
       });
     }
   }
