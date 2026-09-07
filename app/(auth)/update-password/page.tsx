@@ -25,13 +25,7 @@ export default function UpdatePasswordPage() {
         </p>
       </div>
 
-      <Card
-        className="border-0"
-        style={{
-          boxShadow:
-            "0 4px 24px rgba(86, 86, 118, 0.08), 0 1px 4px rgba(86, 86, 118, 0.04)",
-        }}
-      >
+      <Card className="border-0 shadow-oreo-md">
         <form action={formAction}>
           <CardContent className="flex flex-col gap-4 pt-6 pb-6">
             {/* Error message */}

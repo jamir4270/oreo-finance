@@ -40,7 +40,7 @@ export function BudgetHealthCard({ budgets, baseCurrency }: BudgetHealthCardProp
   const progressPercent = totalBudgeted > 0 ? Math.min((totalSpent / totalBudgeted) * 100, 100) : 0;
 
   return (
-    <Card className="h-full border-0 shadow-sm" style={{ boxShadow: "0 4px 24px rgba(86, 86, 118, 0.06), 0 1px 4px rgba(86, 86, 118, 0.03)" }}>
+    <Card className="h-full border-0 shadow-oreo-md">
       <CardHeader className="pb-4">
         <CardTitle className="font-heading text-2xl text-oreo-slate-purple">Budget Health</CardTitle>
         <CardDescription className="text-sm">Overview of active budgets</CardDescription>

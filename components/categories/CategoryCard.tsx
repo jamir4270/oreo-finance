@@ -22,10 +22,24 @@ interface CategoryCardProps {
 export function CategoryCard({ category, onEdit, onDelete }: CategoryCardProps) {
   const Icon = category.icon ? (LucideIcons as any)[category.icon] : LucideIcons.Tag;
 
+  let typeColors = "bg-card border-border";
+  let iconColors = "bg-oreo-lavender/50 text-oreo-slate-purple";
+  
+  if (category.txn_type === "expense") {
+    typeColors = "bg-[#fbe3e6]/40 border-[#fbe3e6]";
+    iconColors = "bg-white text-[#a76571] shadow-sm";
+  } else if (category.txn_type === "income") {
+    typeColors = "bg-[#dff2ef]/50 border-[#dff2ef]";
+    iconColors = "bg-white text-[#5f8f8a] shadow-sm";
+  } else if (category.txn_type === "transfer") {
+    typeColors = "bg-muted/50 border-border/50";
+    iconColors = "bg-background text-foreground shadow-sm";
+  }
+
   return (
-    <div className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:shadow-md overflow-hidden">
+    <div className={`flex items-center justify-between rounded-full border p-2 pr-4 shadow-sm transition-all hover:shadow-md overflow-hidden ${typeColors}`}>
       <div className="flex items-center gap-3 min-w-0">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-oreo-lavender/50 text-oreo-slate-purple">
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${iconColors}`}>
           {Icon && <Icon className="h-5 w-5" />}
         </div>
         <div className="flex flex-col min-w-0">

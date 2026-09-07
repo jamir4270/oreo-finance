@@ -6,13 +6,7 @@ import { updateAccount } from "@/app/actions/accounts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { IconPicker } from "@/components/ui/icon-picker";
 import { Lock } from "lucide-react";
 import { toast } from "sonner";
@@ -78,15 +72,13 @@ export function EditAccountDialog({ account, open, onOpenChange }: EditAccountDi
   if (!account) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Edit Account</DialogTitle>
-          <DialogDescription>
-            Update the details of your financial account.
-          </DialogDescription>
-        </DialogHeader>
-        <form key={account.id} action={formAction} className="flex flex-col gap-4 mt-4">
+    <ResponsiveSheet 
+      open={open} 
+      onOpenChange={onOpenChange}
+      title="Edit Account"
+      description="Update the details of your financial account."
+    >
+      <form key={account.id} action={formAction} className="flex flex-col gap-4">
           <input type="hidden" name="icon" value={icon} />
 
           <div className="flex flex-col gap-2">
@@ -133,7 +125,6 @@ export function EditAccountDialog({ account, open, onOpenChange }: EditAccountDi
 
           <SubmitButton />
         </form>
-      </DialogContent>
-    </Dialog>
+    </ResponsiveSheet>
   );
 }

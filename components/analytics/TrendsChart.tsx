@@ -109,7 +109,7 @@ export function TrendsChart({
   ];
 
   return (
-    <Card className="h-full border-0 shadow-sm flex flex-col" style={{ boxShadow: "0 4px 24px rgba(86, 86, 118, 0.06), 0 1px 4px rgba(86, 86, 118, 0.03)" }}>
+    <Card className="h-full border-0 shadow-oreo-md flex flex-col">
       <CardHeader className="pb-4 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
           <CardTitle className="font-heading text-2xl text-oreo-slate-purple">Income vs. Expense</CardTitle>

@@ -21,13 +21,7 @@ export default function SignupPage() {
   if (state?.success) {
     return (
       <div className="flex w-full flex-col gap-4">
-        <Card
-          className="border-0"
-          style={{
-            boxShadow:
-              "0 4px 24px rgba(86, 86, 118, 0.08), 0 1px 4px rgba(86, 86, 118, 0.04)",
-          }}
-        >
+        <Card className="border-0 shadow-oreo-md">
           <CardContent className="flex flex-col items-center gap-4 pt-8 pb-8 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-oreo-dusty-teal/10">
               <MailCheck className="h-8 w-8 text-oreo-dusty-teal" />
@@ -63,13 +57,7 @@ export default function SignupPage() {
         </p>
       </div>
 
-      <Card
-        className="border-0"
-        style={{
-          boxShadow:
-            "0 4px 24px rgba(86, 86, 118, 0.08), 0 1px 4px rgba(86, 86, 118, 0.04)",
-        }}
-      >
+      <Card className="border-0 shadow-oreo-md">
         <form action={formAction}>
           <CardContent className="flex flex-col gap-4 pt-6">
             {/* Error message */}
@@ -124,35 +112,36 @@ export default function SignupPage() {
               />
             </div>
 
-            {/* Terms & Conditions */}
-            <div className="flex items-start gap-2 pt-2">
-              <input
-                type="checkbox"
-                id="terms"
-                name="terms"
-                value="on"
-                className="mt-[0.15rem] h-4 w-4 shrink-0 rounded border border-input text-oreo-slate-purple focus:ring-oreo-slate-purple"
-                required
-              />
-              <Label
-                htmlFor="terms"
-                className="text-sm font-normal leading-relaxed text-muted-foreground cursor-pointer"
-              >
-                I agree to the{" "}
-                <TermsDialog>
-                  <button
-                    type="button"
-                    className="text-oreo-slate-purple font-medium hover:text-oreo-periwinkle transition-colors hover:underline"
-                  >
-                    Terms & Conditions
-                  </button>
-                </TermsDialog>
-              </Label>
-            </div>
+            {/* Verification & Terms Card */}
+            <div className="flex flex-col gap-4 rounded-xl bg-oreo-lavender/20 p-4 border border-oreo-lavender/50 mt-2">
+              <div className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  name="terms"
+                  value="on"
+                  className="mt-[0.15rem] h-4 w-4 shrink-0 rounded border border-input text-oreo-slate-purple focus:ring-oreo-slate-purple"
+                  required
+                />
+                <Label
+                  htmlFor="terms"
+                  className="text-sm font-normal leading-relaxed text-muted-foreground cursor-pointer"
+                >
+                  I agree to the{" "}
+                  <TermsDialog>
+                    <button
+                      type="button"
+                      className="text-oreo-slate-purple font-medium hover:text-oreo-periwinkle transition-colors hover:underline"
+                    >
+                      Terms & Conditions
+                    </button>
+                  </TermsDialog>
+                </Label>
+              </div>
 
-            {/* Turnstile */}
-            <div className="flex justify-center pt-2 min-h-[65px]">
-              <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""} />
+              <div className="flex justify-center min-h-[65px] bg-background/50 rounded-lg p-2">
+                <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""} />
+              </div>
             </div>
 
             {/* Submit */}

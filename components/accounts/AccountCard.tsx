@@ -35,7 +35,7 @@ export function AccountCard({ account, onEdit }: AccountCardProps) {
   const Icon = account.icon ? (LucideIcons as any)[account.icon] : LucideIcons.Wallet;
 
   return (
-    <div className="flex items-center sm:flex-col sm:items-stretch justify-between rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-sm transition-all hover:shadow-md gap-4 sm:gap-0">
+    <div className="flex items-center sm:flex-col sm:items-stretch justify-between rounded-xl border border-border bg-card p-4 sm:p-6 shadow-oreo-sm transition-all hover:shadow-oreo-md gap-4 sm:gap-0">
       <div className="flex items-center sm:items-start justify-between flex-1 sm:flex-none min-w-0">
         <div className="flex items-center gap-3 min-w-0">
           <div className="flex h-10 w-10 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-oreo-lavender/50 text-oreo-slate-purple">
@@ -92,12 +92,12 @@ export function AccountCard({ account, onEdit }: AccountCardProps) {
           <p className="hidden sm:block text-sm font-medium text-muted-foreground mb-1">
             Current Balance
           </p>
-          <div className="flex items-baseline gap-1">
+          <div className="flex items-center gap-2">
+            <span className="rounded bg-oreo-lavender/40 px-2 py-0.5 font-mono text-[10px] sm:text-xs font-bold uppercase tracking-wider text-oreo-slate-purple">
+              {account.currency}
+            </span>
             <span className="text-lg sm:text-2xl font-semibold tracking-tight text-foreground">
               {account.balance.toFixed(2)}
-            </span>
-            <span className="text-[10px] sm:text-sm font-medium text-muted-foreground">
-              {account.currency}
             </span>
           </div>
         </div>
