@@ -1,9 +1,11 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageTransition } from "@/components/layout/page-transition";
 
 // Fallback for routes without their own loading.tsx: a generic header + list,
 // so navigation never flashes a full-screen loader.
 export default function AppLoading() {
   return (
+    <PageTransition>
     <div className="flex flex-1 flex-col p-6 md:p-10 max-w-5xl mx-auto w-full" aria-busy="true" aria-label="Loading">
       <div className="flex flex-col gap-2 border-b border-border pb-6">
         <Skeleton className="h-9 w-48" />
@@ -15,5 +17,6 @@ export default function AppLoading() {
         ))}
       </div>
     </div>
+    </PageTransition>
   );
 }

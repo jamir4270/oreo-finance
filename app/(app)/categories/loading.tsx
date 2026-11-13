@@ -1,7 +1,9 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageTransition } from "@/components/layout/page-transition";
 
 export default function CategoriesLoading() {
   return (
+    <PageTransition>
     <div className="flex flex-1 flex-col p-6 md:p-10 max-w-5xl mx-auto w-full" aria-busy="true" aria-label="Loading">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div className="flex flex-col gap-2">
@@ -26,5 +28,6 @@ export default function CategoriesLoading() {
         </div>
       </div>
     </div>
+    </PageTransition>
   );
 }

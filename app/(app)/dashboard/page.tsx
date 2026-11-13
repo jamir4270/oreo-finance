@@ -1,4 +1,5 @@
 import { createClient, getAuthUser } from "@/lib/supabase/server";
+import { PageTransition } from "@/components/layout/page-transition";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { Mascot } from "@/components/ui/mascot";
@@ -6,15 +7,18 @@ import Link from "next/link";
 import { ArrowRight, Wallet } from "lucide-react";
 import { DynamicIcon } from "@/lib/icons";
 import { getExchangeRates } from "@/lib/exchange-rates";
-import { convertCurrency, getCurrencySymbol, formatAmount, currencyDecimals } from "@/lib/currency";
+import { convertCurrency, getCurrencySymbol, formatAmount, currencyDecimals, amountIn } from "@/lib/currency";
 import { StaleRateBanner } from "@/components/ui/stale-rate-banner";
+import { SafeToSpendCard } from "@/components/dashboard/SafeToSpendCard";
+import { loadCurrentBudgets, safeToSpend } from "@/lib/budget-periods";
+import { getToday } from "@/lib/today";
 
 export default async function DashboardPage() {
   const user = await getAuthUser();
   if (!user) return null;
   const supabase = await createClient();
 
-  const [{ data: profile }, { rates, isStale }, { data: rawAccounts }, { data: balances }, { data: transactions }] = await Promise.all([
+  const [{ data: profile }, { rates, isStale }, { data: rawAccounts }, { data: balances }, { data: transactions }, { data: budgets }, today] = await Promise.all([
     supabase.from("profiles").select("base_currency").eq("id", user.id).single(),
     getExchangeRates(),
     supabase.from("accounts").select("*").eq("user_id", user.id),
@@ -29,6 +33,8 @@ export default async function DashboardPage() {
       .eq("user_id", user.id)
       .order("txn_date", { ascending: false })
       .limit(5),
+    supabase.from("budgets").select("*").eq("user_id", user.id),
+    getToday(),
   ]);
 
   const baseCurrency = profile?.base_currency || "USD";
@@ -45,7 +51,19 @@ export default async function DashboardPage() {
 
   const totalBalance = activeAccounts.reduce((sum, acc) => sum + acc.convertedBalance, 0);
 
+  // Remaining per budget in the base currency (limits are stored in each budget's currency)
+  const loadedBudgets = await loadCurrentBudgets(supabase, user.id, budgets || [], baseCurrency, rates, today);
+  const allowance = safeToSpend(
+    loadedBudgets.flatMap(({ budget, period, spent }) =>
+      period
+        ? [{ remaining: convertCurrency(Number(period.effective_limit), budget.currency || baseCurrency, baseCurrency, rates) - spent, periodEnd: period.period_end }]
+        : []
+    ),
+    today
+  );
+
   return (
+    <PageTransition>
     <div className="flex flex-col gap-8 p-6 md:p-10 max-w-5xl mx-auto w-full">
       <StaleRateBanner isStale={isStale} />
       
@@ -58,6 +76,10 @@ export default async function DashboardPage() {
           <AnimatedCounter value={totalBalance} prefix={currencySymbol} decimals={currencyDecimals(baseCurrency)} />
         </h1>
       </div>
+
+      {(accounts.length > 0 || (transactions?.length ?? 0) > 0) && (
+        <SafeToSpendCard {...allowance} baseCurrency={baseCurrency} currencySymbol={currencySymbol} />
+      )}
 
       {(!accounts?.length && !transactions?.length) ? (
         <Card
@@ -87,7 +109,7 @@ export default async function DashboardPage() {
           <Card className="border-0 shadow-sm flex flex-col" style={{ boxShadow: "0 4px 24px rgba(86, 86, 118, 0.04)" }}>
             <CardHeader className="pb-4 flex flex-row items-center justify-between">
               <CardTitle className="font-heading text-xl text-oreo-slate-purple">Your Accounts</CardTitle>
-              <Link href="/accounts" className="text-sm font-medium text-oreo-dusty-teal flex items-center hover:underline">
+              <Link href="/accounts" transitionTypes={["nav-forward"]} className="text-sm font-medium text-oreo-dusty-teal flex items-center hover:underline">
                 View All <ArrowRight className="ml-1 h-3 w-3" />
               </Link>
             </CardHeader>
@@ -117,7 +139,7 @@ export default async function DashboardPage() {
           <Card className="border-0 shadow-sm flex flex-col" style={{ boxShadow: "0 4px 24px rgba(86, 86, 118, 0.04)" }}>
             <CardHeader className="pb-4 flex flex-row items-center justify-between">
               <CardTitle className="font-heading text-xl text-oreo-slate-purple">Recent Activity</CardTitle>
-              <Link href="/transactions" className="text-sm font-medium text-oreo-dusty-teal flex items-center hover:underline">
+              <Link href="/transactions" transitionTypes={["nav-forward"]} className="text-sm font-medium text-oreo-dusty-teal flex items-center hover:underline">
                 View All <ArrowRight className="ml-1 h-3 w-3" />
               </Link>
             </CardHeader>
@@ -126,7 +148,7 @@ export default async function DashboardPage() {
                 const isExpense = txn.type === "expense";
                 const isTransfer = txn.type === "transfer";
                                 const txnCurrency = (txn as any).account?.currency || baseCurrency;
-                const convertedAmount = convertCurrency(Number(txn.amount), txnCurrency, baseCurrency, rates);
+                const convertedAmount = amountIn(txn, baseCurrency, rates);
                 const prefix = isTransfer ? "" : isExpense ? "-" : "+";
                 return (
                   <div key={txn.id} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
@@ -159,5 +181,6 @@ export default async function DashboardPage() {
         </div>
       )}
     </div>
+    </PageTransition>
   );
 }

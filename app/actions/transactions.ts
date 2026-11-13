@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { getExchangeRates } from "@/lib/exchange-rates";
-import { convertCurrency, roundToCurrency } from "@/lib/currency";
+import { tryConvertCurrency, roundToCurrency } from "@/lib/currency";
 
 export type TransactionActionState = {
   error?: string;
@@ -12,6 +12,9 @@ export type TransactionActionState = {
 } | null;
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+const rateUnavailable = (from: string, to: string) =>
+  `We couldn't get a ${from} → ${to} exchange rate right now, so this wasn't saved. Try again shortly, or enter the amount in the account's currency.`;
 
 /** Validates the form and converts amounts into the accounts' currencies. Shared by create and update. */
 async function parseTransactionForm(supabase: SupabaseServerClient, formData: FormData) {
@@ -42,11 +45,14 @@ async function parseTransactionForm(supabase: SupabaseServerClient, formData: Fo
     return { error: "Amount must be greater than zero." } as const;
   }
 
-  // Fetch account currencies
-  const { data: accountsData } = await supabase
-    .from("accounts")
-    .select("id, currency")
-    .in("id", to_account_id ? [account_id, to_account_id] : [account_id]);
+  // Fetch account currencies and the user's base currency (for the base_amount snapshot)
+  const [{ data: accountsData }, { data: profile }] = await Promise.all([
+    supabase
+      .from("accounts")
+      .select("id, currency")
+      .in("id", to_account_id ? [account_id, to_account_id] : [account_id]),
+    supabase.from("profiles").select("base_currency").single(),
+  ]);
 
   const sourceAccount = accountsData?.find((a) => a.id === account_id);
   const destAccount = accountsData?.find((a) => a.id === to_account_id);
@@ -61,7 +67,11 @@ async function parseTransactionForm(supabase: SupabaseServerClient, formData: Fo
 
   if (inputCurrency && inputCurrency !== sourceAccount.currency) {
     const { rates } = await getExchangeRates();
-    amount = convertCurrency(inputAmount, inputCurrency, sourceAccount.currency, rates);
+    const converted = tryConvertCurrency(inputAmount, inputCurrency, sourceAccount.currency, rates);
+    if (converted === null) {
+      return { error: rateUnavailable(inputCurrency, sourceAccount.currency) } as const;
+    }
+    amount = converted;
     original_amount = inputAmount;
     original_currency = inputCurrency;
   }
@@ -81,10 +91,11 @@ async function parseTransactionForm(supabase: SupabaseServerClient, formData: Fo
 
     if (sourceAccount.currency !== destAccount.currency) {
       const { rates } = await getExchangeRates();
-      to_amount = roundToCurrency(
-        convertCurrency(amount, sourceAccount.currency, destAccount.currency, rates),
-        destAccount.currency
-      );
+      const converted = tryConvertCurrency(amount, sourceAccount.currency, destAccount.currency, rates);
+      if (converted === null) {
+        return { error: rateUnavailable(sourceAccount.currency, destAccount.currency) } as const;
+      }
+      to_amount = roundToCurrency(converted, destAccount.currency);
       exchange_rate = rates[destAccount.currency] / rates[sourceAccount.currency];
     } else {
       to_amount = amount;
@@ -92,10 +103,22 @@ async function parseTransactionForm(supabase: SupabaseServerClient, formData: Fo
     }
   }
 
+  // Freeze the base-currency value at today's rate so history doesn't drift. If the rate
+  // is unavailable, leave it null: reads fall back to live conversion.
+  const base_currency: string | null = profile?.base_currency ?? null;
+  let base_amount: number | null = null;
+  if (base_currency) {
+    const rates = sourceAccount.currency === base_currency ? {} : (await getExchangeRates()).rates;
+    const converted = tryConvertCurrency(amount, sourceAccount.currency, base_currency, rates);
+    base_amount = converted === null ? null : roundToCurrency(converted, base_currency);
+  }
+
   return {
     fields: {
       type,
       amount,
+      base_amount,
+      base_currency: base_amount === null ? null : base_currency,
       to_account_id: type === "transfer" ? to_account_id : null,
       to_amount,
       exchange_rate,

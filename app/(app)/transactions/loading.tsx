@@ -1,7 +1,9 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageTransition } from "@/components/layout/page-transition";
 
 export default function TransactionsLoading() {
   return (
+    <PageTransition>
     <div className="flex flex-col gap-6 p-4 md:p-8 lg:p-10 max-w-5xl mx-auto w-full" aria-busy="true" aria-label="Loading">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div className="flex flex-col gap-1">
@@ -33,5 +35,6 @@ export default function TransactionsLoading() {
         ))}
       </div>
     </div>
+    </PageTransition>
   );
 }

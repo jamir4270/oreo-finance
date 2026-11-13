@@ -1,4 +1,5 @@
 import { createClient, getAuthUser } from "@/lib/supabase/server";
+import { PageTransition } from "@/components/layout/page-transition";
 import { getExchangeRates } from "@/lib/exchange-rates";
 import { redirect } from "next/navigation";
 import { AccountsPageClient } from "@/components/accounts/AccountsPageClient";
@@ -34,6 +35,7 @@ export default async function AccountsPage() {
   });
 
   return (
+    <PageTransition>
     <div className="flex flex-1 flex-col p-6 md:p-10 max-w-5xl mx-auto w-full">
       <AccountsPageClient 
         accounts={accounts} 
@@ -41,5 +43,6 @@ export default async function AccountsPage() {
         rates={rates}
       />
     </div>
+    </PageTransition>
   );
 }

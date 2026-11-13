@@ -81,9 +81,10 @@ export async function createBudget(
 
   // Create initial budget_periods row
   const { computePeriodBounds } = await import("@/lib/budget-periods");
+  const { getToday } = await import("@/lib/today");
   const { periodStart, periodEnd } = computePeriodBounds(
     { period_type, start_date, end_date: period_type === "custom" ? end_date : null },
-    new Date()
+    await getToday()
   );
 
   const { error: periodError } = await supabase.from("budget_periods").insert({

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { localDay } from "@/lib/dates";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { createBudget } from "@/app/actions/budgets";
@@ -141,7 +142,7 @@ export function CreateBudgetDialog({
               id="start_date"
               name="start_date"
               type="date"
-              defaultValue={new Date().toISOString().split("T")[0]}
+              defaultValue={localDay()}
               required
             />
           </div>

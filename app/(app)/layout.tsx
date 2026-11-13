@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient, getAuthUser } from "@/lib/supabase/server";
 import { AppShell } from "@/components/layout/AppShell";
+import { getToday } from "@/lib/today";
 
 /**
  * Protected route group layout.
@@ -22,7 +23,7 @@ export default async function AppLayout({
   }
   const supabase = await createClient();
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = await getToday();
   // Accounts and categories feed the global Add Transaction modal
   const [{ data: accounts }, { data: categories }, { count: dailyTxnCount }] = await Promise.all([
     supabase.from("accounts").select("id, name, currency").eq("user_id", user.id).order("name"),

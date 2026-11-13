@@ -4,6 +4,7 @@ import "./globals.css";
 import { PwaRegistration } from "@/components/PwaRegistration";
 import { Analytics } from "@vercel/analytics/next"
 import { MotionProvider } from "@/components/MotionProvider";
+import { TimezoneCookie } from "@/components/TimezoneCookie";
 
 /**
  * Typography (Design Spec §3):
@@ -71,6 +72,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* iOS banners drop from the top centre, clear of the notch */}
         <Toaster position="top-center" richColors offset={{ top: "max(16px, env(safe-area-inset-top))" }} mobileOffset={{ top: "max(12px, env(safe-area-inset-top))" }} />
         <PwaRegistration />
+        <TimezoneCookie />
       </body>
     </html>
   );

@@ -75,6 +75,7 @@ export function MobileBottomNav({ onOpenAddTransaction }: MobileBottomNavProps) 
     <>
       <nav
         aria-label="Primary"
+        style={{ viewTransitionName: "tab-bar" }}
         className="fixed inset-x-0 bottom-0 z-50 border-t border-black/[0.08] bg-card/80 pb-safe backdrop-blur-xl backdrop-saturate-150 lg:hidden"
       >
         <div className="flex h-[49px] items-stretch">
@@ -115,6 +116,7 @@ export function MobileBottomNav({ onOpenAddTransaction }: MobileBottomNavProps) 
               <Link
                 key={item.href}
                 href={item.href}
+                transitionTypes={["nav-forward"]}
                 onClick={() => setIsMoreOpen(false)}
                 aria-current={active ? "page" : undefined}
                 className="flex min-h-11 items-center gap-3 pl-4 transition-colors active:bg-foreground/[0.06]"

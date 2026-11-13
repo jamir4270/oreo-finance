@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { localDay } from "@/lib/dates";
 import { Calendar, ChevronDown, Delete, NotebookPen, Wallet, ArrowRight } from "lucide-react";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { DynamicIcon } from "@/lib/icons";
@@ -81,7 +82,7 @@ export function QuickLogFields(props: QuickLogFieldsProps) {
   const amount = parseFloat(amountStr);
   const canSave = amount > 0 && !!accountId && !!categoryId && (!isTransfer || !!toAccountId);
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDay();
   const dateLabel =
     date === today
       ? "Today"

@@ -10,6 +10,7 @@ export function MobileTopBar({ dailyTxnCount = 0 }: { dailyTxnCount?: number }) 
   return (
     <div
       {...{ [NAV_BAR_ATTR]: "" }}
+      style={{ viewTransitionName: "nav-bar" }}
       className={cn(
         // Hairline appears only once content scrolls under the bar, as in UINavigationBar
         "sticky top-0 z-40 flex items-center justify-between border-b bg-background/80 px-5 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur-xl backdrop-saturate-150 transition-colors duration-200 lg:hidden",

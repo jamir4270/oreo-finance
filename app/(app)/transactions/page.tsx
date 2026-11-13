@@ -1,4 +1,7 @@
 import { createClient, getAuthUser } from "@/lib/supabase/server";
+import { getToday } from "@/lib/today";
+import { dateRangeBounds } from "@/lib/dates";
+import { PageTransition } from "@/components/layout/page-transition";
 import { redirect } from "next/navigation";
 import { TransactionsPageClient } from "@/components/transactions/TransactionsPageClient";
 import { getExchangeRates } from "@/lib/exchange-rates";
@@ -27,20 +30,7 @@ export default async function TransactionsPage(props: { searchParams: SearchPara
   const pageSize = 50;
 
   // Compute date range filters
-  const today = new Date();
-  let startDate: Date | null = null;
-  let endDate: Date | null = null;
-  
-  if (dateRange === "last_30") {
-    startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30);
-  } else if (dateRange === "this_month") {
-    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-  } else if (dateRange === "last_month") {
-    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-    endDate = new Date(today.getFullYear(), today.getMonth(), 0);
-  } else if (dateRange === "this_year") {
-    startDate = new Date(today.getFullYear(), 0, 1);
-  }
+  const { start: startDate, end: endDate } = dateRangeBounds(dateRange, await getToday());
 
   // Build query
   let query = supabase
@@ -63,10 +53,10 @@ export default async function TransactionsPage(props: { searchParams: SearchPara
     query = query.eq("category_id", filterCategory);
   }
   if (startDate) {
-    query = query.gte("txn_date", startDate.toISOString().split('T')[0]);
+    query = query.gte("txn_date", startDate);
   }
   if (endDate) {
-    query = query.lte("txn_date", endDate.toISOString().split('T')[0]);
+    query = query.lte("txn_date", endDate);
   }
 
   query = query
@@ -86,6 +76,7 @@ export default async function TransactionsPage(props: { searchParams: SearchPara
   const { StaleRateBanner } = await import("@/components/ui/stale-rate-banner");
 
   return (
+    <PageTransition>
     <div className="flex flex-1 flex-col p-6 md:p-10 max-w-5xl mx-auto w-full">
       <StaleRateBanner isStale={isStale} />
       <TransactionsPageClient 
@@ -104,5 +95,6 @@ export default async function TransactionsPage(props: { searchParams: SearchPara
         }}
       />
     </div>
+    </PageTransition>
   );
 }

@@ -1,8 +1,10 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageTransition } from "@/components/layout/page-transition";
 import { Card } from "@/components/ui/card";
 
 export default function SettingsLoading() {
   return (
+    <PageTransition>
     <div className="flex flex-1 flex-col p-6 md:p-10 max-w-5xl mx-auto w-full" aria-busy="true" aria-label="Loading">
       <div className="flex flex-col gap-2 border-b border-border pb-6 mb-8">
         <Skeleton className="h-9 w-32" />
@@ -21,5 +23,6 @@ export default function SettingsLoading() {
         ))}
       </div>
     </div>
+    </PageTransition>
   );
 }

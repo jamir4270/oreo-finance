@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { localDay } from "@/lib/dates";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { createTransaction, updateTransaction } from "@/app/actions/transactions";
@@ -256,7 +257,7 @@ export function TransactionDialog({
             categories={filteredCategories}
             categoryId={effectiveCategoryId}
             onCategoryChange={setCategoryId}
-            defaultDate={draftValue("txn_date") ?? new Date().toISOString().split("T")[0]}
+            defaultDate={draftValue("txn_date") ?? localDay()}
             defaultNote={draftValue("note")}
             convertedAmountStr={convertedAmountStr}
             error={state?.error}
@@ -426,7 +427,7 @@ export function TransactionDialog({
                 draftValue("txn_date") ??
                 (transaction?.txn_date
                   ? transaction.txn_date
-                  : new Date().toISOString().split("T")[0])
+                  : localDay())
               }
               required
             />

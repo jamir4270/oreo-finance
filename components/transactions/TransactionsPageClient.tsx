@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { localDay } from "@/lib/dates";
 import { formatAmount } from "@/lib/currency";
 import { PageTitle } from "@/components/layout/nav-title";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
@@ -257,8 +258,8 @@ export function TransactionsPageClient({
                 year: dateObj.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
               });
 
-              if (date === today.toISOString().split("T")[0]) dateString = "Today";
-              else if (date === yesterday.toISOString().split("T")[0]) dateString = "Yesterday";
+              if (date === localDay(today)) dateString = "Today";
+              else if (date === localDay(yesterday)) dateString = "Yesterday";
 
               return (
                 <div key={date} className="flex flex-col gap-3">

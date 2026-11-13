@@ -1,9 +1,12 @@
 import { createClient, getAuthUser } from "@/lib/supabase/server";
+import { getToday } from "@/lib/today";
+import { dateRangeBounds } from "@/lib/dates";
+import { PageTransition } from "@/components/layout/page-transition";
 import { redirect } from "next/navigation";
 import { AnalyticsPageClient, AnalyticsTransaction, AnalyticsBudget, AnalyticsAccount } from "@/components/analytics/AnalyticsPageClient";
 import { getExchangeRates } from "@/lib/exchange-rates";
-import { convertCurrency } from "@/lib/currency";
-import { ensureCurrentPeriods, computeActualSpentBatched } from "@/lib/budget-periods";
+import { amountIn } from "@/lib/currency";
+import { loadCurrentBudgets } from "@/lib/budget-periods";
 import { StaleRateBanner } from "@/components/ui/stale-rate-banner";
 
 export default async function AnalyticsPage({
@@ -23,17 +26,8 @@ export default async function AnalyticsPage({
   const accountFilter = (resolvedParams.account as string) || "all";
 
   // Determine date bounds
-  const today = new Date();
-  let startDate = new Date(0); // far past
-  if (dateRange === "last_30") {
-    startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30);
-  } else if (dateRange === "this_month") {
-    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-  } else if (dateRange === "last_month") {
-    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-  } else if (dateRange === "this_year") {
-    startDate = new Date(today.getFullYear(), 0, 1);
-  }
+  const today = await getToday();
+  const startDate = dateRangeBounds(dateRange, today).start ?? "1970-01-01";
 
   const [{ data: profile }, { rates, isStale }, { data: accountsData }, { data: transactionsData }, { data: budgetsData }] = await Promise.all([
     supabase.from("profiles").select("base_currency").eq("id", user.id).single(),
@@ -43,12 +37,12 @@ export default async function AnalyticsPage({
     supabase
       .from("transactions")
       .select(`
-        id, type, amount, txn_date, category_id, account_id,
+        id, type, amount, base_amount, base_currency, txn_date, category_id, account_id,
         account:accounts!transactions_account_id_fkey (currency),
         category:categories (name, icon, txn_type)
       `)
       .eq("user_id", user.id)
-      .gte("txn_date", startDate.toISOString())
+      .gte("txn_date", startDate)
       .order("txn_date", { ascending: false }),
     supabase
       .from("budgets")
@@ -65,8 +59,7 @@ export default async function AnalyticsPage({
 
   // Map transactions and convert to base currency
   const transactions: AnalyticsTransaction[] = (transactionsData || []).map((t: any) => {
-    const currency = t.account?.currency || baseCurrency;
-    const convertedAmount = convertCurrency(t.amount, currency, baseCurrency, rates);
+    const convertedAmount = amountIn(t, baseCurrency, rates);
     return {
       id: t.id,
       type: t.type,
@@ -82,30 +75,9 @@ export default async function AnalyticsPage({
   const budgets: AnalyticsBudget[] = [];
 
   if (budgetsData && budgetsData.length > 0) {
-    const currentPeriods = await ensureCurrentPeriods(supabase, budgetsData, user.id);
+    const loaded = await loadCurrentBudgets(supabase, user.id, budgetsData, baseCurrency, rates, today);
 
-    const categoryPeriods = currentPeriods.map((cp, idx) => {
-      if (!cp) return null;
-      return {
-        categoryId: budgetsData[idx].category_id,
-        periodStart: cp.period_start,
-        periodEnd: cp.period_end,
-        periodId: cp.id,
-      };
-    }).filter(Boolean) as any[];
-
-    const spentMap = await computeActualSpentBatched(
-      supabase,
-      user.id,
-      categoryPeriods,
-      baseCurrency,
-      rates
-    );
-
-    for (let i = 0; i < budgetsData.length; i++) {
-      const budget = budgetsData[i];
-      const currentPeriod = currentPeriods[i];
-      const computedSpent = currentPeriod ? (spentMap.get(currentPeriod.id) || 0) : 0;
+    for (const { budget, period: currentPeriod, spent: computedSpent } of loaded) {
 
       budgets.push({
         id: budget.id,
@@ -120,6 +92,7 @@ export default async function AnalyticsPage({
   }
 
   return (
+    <PageTransition>
     <div className="flex flex-1 flex-col p-4 md:p-8 lg:p-10 max-w-5xl mx-auto w-full">
       <StaleRateBanner isStale={isStale} />
       <AnalyticsPageClient
@@ -131,5 +104,6 @@ export default async function AnalyticsPage({
         initialAccountFilter={accountFilter}
       />
     </div>
+    </PageTransition>
   );
 }

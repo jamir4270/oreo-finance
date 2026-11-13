@@ -1,4 +1,5 @@
 import { createClient, getAuthUser } from "@/lib/supabase/server";
+import { PageTransition } from "@/components/layout/page-transition";
 import { redirect } from "next/navigation";
 import { CategoriesPageClient } from "@/components/categories/CategoriesPageClient";
 
@@ -17,10 +18,12 @@ export default async function CategoriesPage() {
     .order("name");
 
   return (
+    <PageTransition>
     <div className="flex flex-1 flex-col p-6 md:p-10 max-w-5xl mx-auto w-full">
       <CategoriesPageClient 
         categories={categories || []} 
       />
     </div>
+    </PageTransition>
   );
 }
