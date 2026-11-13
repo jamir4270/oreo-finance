@@ -91,7 +91,7 @@ export function LandingPageClient({ isLoggedIn }: { isLoggedIn: boolean }) {
   const ctaLabel = isLoggedIn ? "Go to Dashboard" : "Start tracking free";
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f5f6ff] text-[#3d3d5c] font-sans antialiased overflow-x-hidden">
+    <div className="flex flex-col min-h-dvh bg-[#f5f6ff] text-[#3d3d5c] font-sans antialiased overflow-x-hidden">
       {/* ════════════════════════ NAV ════════════════════════ */}
       <motion.nav
         className="sticky top-0 z-50 flex items-center justify-between px-7 py-5 transition-colors"

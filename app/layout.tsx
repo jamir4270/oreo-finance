@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fredoka, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { PwaRegistration } from "@/components/PwaRegistration";
 import { Analytics } from "@vercel/analytics/next"
+import { MotionProvider } from "@/components/MotionProvider";
 
 /**
  * Typography (Design Spec §3):
@@ -28,6 +29,14 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   display: "swap",
 });
+
+// viewport-fit=cover lets the layout reach under the notch/home indicator; safe-area utilities pad it back.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#d8dcff",
+};
 
 export const metadata: Metadata = {
   title: "Oreo — Personal Finance Tracker",
@@ -58,8 +67,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <Analytics />
-        {children}
-        <Toaster position="top-right" richColors />
+        <MotionProvider>{children}</MotionProvider>
+        {/* iOS banners drop from the top centre, clear of the notch */}
+        <Toaster position="top-center" richColors offset={{ top: "max(16px, env(safe-area-inset-top))" }} mobileOffset={{ top: "max(12px, env(safe-area-inset-top))" }} />
         <PwaRegistration />
       </body>
     </html>

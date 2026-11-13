@@ -6,7 +6,7 @@ import { useFormStatus } from "react-dom";
 import { createTransaction, updateTransaction } from "@/app/actions/transactions";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input, MoneyInput } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
@@ -233,7 +233,7 @@ export function TransactionDialog({
                 name="input_currency"
                 value={inputCurrency}
                 onChange={(e) => setInputCurrency(e.target.value)}
-                className="flex h-10 w-[76px] rounded-md border border-input bg-background px-2 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 pointer-coarse:h-11 w-[76px] rounded-md border border-input bg-background px-2 py-2 text-base pointer-fine:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {CURRENCIES.map((c) => (
                   <option key={c.code} value={c.code}>
@@ -241,17 +241,14 @@ export function TransactionDialog({
                   </option>
                 ))}
               </select>
-              <Input
+              <MoneyInput
                 id="input_amount"
                 name="input_amount"
-                type="number"
-                step="0.01"
-                min="0.01"
                 placeholder="0.00"
                 value={amountStr}
                 onChange={(e) => setAmountStr(e.target.value)}
                 required
-                className="flex-1 h-10"
+                className="flex-1 h-10 pointer-coarse:h-11 font-medium tabular-nums"
               />
             </div>
           </div>
@@ -264,7 +261,7 @@ export function TransactionDialog({
                 name="account_id"
                 value={accountId}
                 onChange={(e) => setAccountId(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 pointer-coarse:h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base pointer-fine:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 required
               >
                 {accounts.map((acc) => (
@@ -282,7 +279,7 @@ export function TransactionDialog({
                   id="category_id"
                   name="category_id"
                   defaultValue={draftValue("category_id") ?? (transaction?.category_id || (filteredCategories[0]?.id || ""))}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 pointer-coarse:h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base pointer-fine:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   required
                 >
                   {filteredCategories.map((cat) => (
@@ -302,7 +299,7 @@ export function TransactionDialog({
                   name="to_account_id"
                   value={toAccountId}
                   onChange={(e) => setToAccountId(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 pointer-coarse:h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base pointer-fine:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   required={type === "transfer"}
                 >
                   <option value="" disabled>Select destination...</option>
@@ -323,7 +320,7 @@ export function TransactionDialog({
                 id="category_id"
                 name="category_id"
                 defaultValue={draftValue("category_id") ?? (transaction?.category_id || (filteredCategories[0]?.id || ""))}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 pointer-coarse:h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base pointer-fine:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 required
               >
                 {filteredCategories.map((cat) => (

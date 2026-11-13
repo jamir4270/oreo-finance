@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "motion/react";
+import { spring } from "@/lib/motion";
 
 interface GoalProgressRingProps {
   progress: number; // 0 to 100
@@ -43,7 +44,7 @@ export function GoalProgressRing({
           strokeDasharray={circumference}
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset }}
-          transition={{ duration: 1.2, ease: "easeOut" }}
+          transition={spring.smooth}
           strokeLinecap="round"
         />
       </svg>

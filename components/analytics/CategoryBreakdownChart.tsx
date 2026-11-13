@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { motion } from "motion/react";
+import { spring } from "@/lib/motion";
 import {
   Card,
   CardContent,
@@ -80,7 +81,7 @@ export function CategoryBreakdownChart({
             className="h-full rounded-full"
             initial={{ width: 0 }}
             animate={{ width: `${pct}%` }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            transition={spring.smooth}
             style={{ backgroundColor: fill }}
           />
         </div>

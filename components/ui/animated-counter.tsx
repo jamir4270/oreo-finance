@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { animate, useInView } from "motion/react";
+import { cn } from "@/lib/utils";
+import { animate, useInView, useReducedMotion } from "motion/react";
+import { spring } from "@/lib/motion";
 
 interface AnimatedCounterProps {
   value: number;
@@ -19,6 +21,8 @@ export function AnimatedCounter({
   const ref = React.useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "0px 0px -50px 0px" });
   const hasAnimated = React.useRef(false);
+  // Imperative animate() ignores MotionConfig, so honour Reduce Motion here.
+  const reduceMotion = useReducedMotion();
 
   React.useEffect(() => {
     if (!ref.current || !inView) return;
@@ -28,8 +32,7 @@ export function AnimatedCounter({
     hasAnimated.current = true;
 
     const controls = animate(startValue, value, {
-      duration: 0.8,
-      ease: [0.22, 1, 0.36, 1], // ease-oreo
+      ...(reduceMotion ? { duration: 0 } : spring.smooth),
       onUpdate(latest) {
         if (ref.current) {
           // Format with commas and exact decimals
@@ -43,10 +46,10 @@ export function AnimatedCounter({
     });
 
     return controls.stop;
-  }, [value, inView, prefix, decimals]);
+  }, [value, inView, prefix, decimals, reduceMotion]);
 
   return (
-    <span ref={ref} className={className}>
+    <span ref={ref} className={cn("tabular-nums", className)}>
       {prefix}{(0).toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}
     </span>
   );

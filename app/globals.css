@@ -74,6 +74,8 @@
   /* === Motion tokens === */
   --ease-oreo: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-oreo-in: cubic-bezier(0.5, 0, 0.75, 0);
+  /* UIKit sheet/navigation curve: fast start, long soft settle */
+  --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
   --duration-xs: 120ms;
   --duration-sm: 180ms;
   --duration-md: 260ms;
@@ -162,7 +164,26 @@
   }
   html {
     @apply font-sans;
+    /* iOS: no grey tap flash, no font inflation in landscape */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
   }
+  /* Removes the 300ms double-tap-zoom delay on controls */
+  a, button, input, select, textarea, label, summary, [role="button"], [role="tab"] {
+    touch-action: manipulation;
+  }
+}
+
+/* Safe areas (notch, home indicator). Needs viewport-fit=cover, set in app/layout.tsx. */
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+/* iOS tab bar: 49pt bar + home indicator */
+@utility pb-tabbar {
+  padding-bottom: calc(49px + env(safe-area-inset-bottom, 0px));
 }
 
 @layer utilities {

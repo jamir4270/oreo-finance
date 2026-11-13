@@ -4,7 +4,7 @@ import * as React from "react";
 import { useFormStatus } from "react-dom";
 import { createAccount } from "@/app/actions/accounts";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input, MoneyInput } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { IconPicker } from "@/components/ui/icon-picker";
@@ -66,7 +66,7 @@ export function CreateAccountDialog({ baseCurrency }: CreateAccountDialogProps) 
             <select
               id="type"
               name="type"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-10 pointer-coarse:h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base pointer-fine:text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               required
               defaultValue="cash"
             >
@@ -83,7 +83,7 @@ export function CreateAccountDialog({ baseCurrency }: CreateAccountDialogProps) 
             <select
               id="currency"
               name="currency"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-10 pointer-coarse:h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base pointer-fine:text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               required
               defaultValue={baseCurrency || "USD"}
             >
@@ -105,7 +105,7 @@ export function CreateAccountDialog({ baseCurrency }: CreateAccountDialogProps) 
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="initial_balance">Initial Balance (Optional)</Label>
-            <Input id="initial_balance" name="initial_balance" type="number" step="0.01" min="0" placeholder="0.00" />
+            <MoneyInput id="initial_balance" name="initial_balance" placeholder="0.00" />
             <p className="text-xs text-muted-foreground">
               If greater than zero, an initial income transaction will be created.
             </p>

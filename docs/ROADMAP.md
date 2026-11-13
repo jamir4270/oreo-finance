@@ -3,7 +3,7 @@
 **Date:** 2026-11-13 · **Baseline:** `main` @ `06b1409` (v3.1.0)
 **Supersedes:** `docs/archive/*` (phases 0–G)
 
-**Progress (branch `fix/bugs-and-speed`):** done: bugs #1, #3, #7, #8, #9, #11; speed S1–S5 (the S3 migration is applied to the hosted DB) S7 (optimistic add and delete; edits still wait for the server) and S8 (skeletons on every route). S6 is partly done (rates deduplicated per request, not yet cached across requests). Vitest has been added (`npm test`). Next: §4 Phase U (U1, safe areas and document scroll).
+**Progress (branch `fix/bugs-and-speed`):** done: bugs #1, #3, #7, #8, #9, #11; speed S1–S5 (the S3 migration is applied to the hosted DB) S7 (optimistic add and delete; edits still wait for the server) and S8 (skeletons on every route). S6 is partly done (rates deduplicated per request, not yet cached across requests). Vitest has been added (`npm test`). iOS pass 1 is done: U1–U4, the U5 tabular numbers (`formatMoney` still to do), C1 bottom sheet (Base UI Drawer, no new dependency), C2 tab bar, a C4-style More menu, and the C6 action sheet for sign-out and delete. Next: C8 keypad-first quick log, C3 large titles, C5 swipe actions, and action sheets for the remaining destructive confirms.
 
 This doc has four parts: (1) an honest product critique, (2) bugs and debt found in review, (3) retrofits, upgrades and where to go next, (4) the plan for UX, speed and iOS-grade polish. Part 4 is the one to act on.
 

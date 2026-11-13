@@ -19,12 +19,14 @@ export function AppShell({ children, accounts, categories, dailyTxnCount }: AppS
   const handleOpenAddModal = () => setIsAddModalOpen(true);
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    // Document scroll (not an inner scroller) so iOS gets rubber-banding, the collapsing
+    // URL bar and tap-status-bar-to-top.
+    <div className="flex min-h-dvh bg-background">
       {/* Desktop Sidebar (lg and up) */}
       <DesktopSidebar onOpenAddTransaction={handleOpenAddModal} />
 
       {/* Main Content Area */}
-      <main className="flex flex-1 flex-col overflow-y-auto pb-16 lg:pb-0">
+      <main className="flex min-w-0 flex-1 flex-col pb-tabbar lg:pb-0">
         <MobileTopBar dailyTxnCount={dailyTxnCount} />
         {children}
       </main>

@@ -18,6 +18,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { ActionSheet } from "@/components/ui/action-sheet";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { Plus, ChevronLeft, ChevronRight, Calendar, Filter, Wallet, Tags } from "lucide-react";
 import {
   Select,
@@ -66,6 +68,7 @@ export function TransactionsPageClient({
   );
   const [isCreateOpen, setIsCreateOpen] = React.useState(false);
   const [isPending, startTransition] = React.useTransition();
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const filterType = initialFilters.type;
   const filterAccount = initialFilters.account;
@@ -325,7 +328,17 @@ export function TransactionsPageClient({
         }}
       />
 
-      <AlertDialog open={!!deletingTxn} onOpenChange={(open) => {
+      {/* Phones confirm with an iOS action sheet; larger screens keep the alert dialog */}
+      <ActionSheet
+        open={!isDesktop && !!deletingTxn}
+        onOpenChange={(open) => {
+          if (!open) setDeletingTxn(null);
+        }}
+        message="This transaction will be permanently deleted from your ledger."
+        actions={[{ label: "Delete Transaction", destructive: true, onSelect: handleDelete }]}
+      />
+
+      <AlertDialog open={isDesktop && !!deletingTxn} onOpenChange={(open) => {
         if (!open) setDeletingTxn(null);
       }}>
         <AlertDialogContent>
