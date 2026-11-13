@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import * as LucideIcons from "lucide-react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ICON_MAP, ICON_NAMES, DynamicIcon } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -19,19 +19,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-// Curated list of finance/lifestyle icons
-export const ICON_NAMES = [
-  "Wallet", "Banknote", "CreditCard", "PiggyBank", "Landmark", "Receipt", "ShoppingCart",
-  "Coffee", "Utensils", "Car", "Bus", "Train", "Plane", "Home", "Wrench",
-  "Lightbulb", "Zap", "Smartphone", "Laptop", "Music", "Film", "Book",
-  "GraduationCap", "Heart", "Smile", "Briefcase", "Gift", "Shirt", "Scissors",
-  "Stethoscope", "Pill", "Baby", "Dog", "Cat", "Dumbbell", "Tent", "Trophy",
-  "Gamepad2", "Tv", "Headphones", "Bitcoin", "Gem", "TrendingUp", "TrendingDown",
-  "PieChart", "BarChart", "Activity", "Flame", "Droplet", "Umbrella", "Snowflake",
-  "Sun", "Moon", "Star"
-] as const;
-
-export type IconName = typeof ICON_NAMES[number];
+export { ICON_NAMES, type IconName } from "@/lib/icons";
 
 interface IconPickerProps {
   value?: string;
@@ -43,7 +31,6 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
   const [open, setOpen] = React.useState(false);
   
   // Safe cast for dynamically rendering icons from Lucide
-  const SelectedIcon = value ? (LucideIcons as Record<string, any>)[value] : null;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -56,7 +43,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
         >
           {value ? (
             <div className="flex items-center gap-2">
-              {SelectedIcon && <SelectedIcon className="h-4 w-4" />}
+              <DynamicIcon icon={value} className="h-4 w-4" />
               <span>{value}</span>
             </div>
           ) : (
@@ -73,9 +60,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
             <CommandGroup>
               <div className="grid grid-cols-4 gap-2 p-2">
                 {ICON_NAMES.map((iconName) => {
-                  const Icon = (LucideIcons as Record<string, any>)[iconName];
-                  if (!Icon) return null;
-                  
+                  const Icon = ICON_MAP[iconName];
                   return (
                     <CommandItem
                       key={iconName}

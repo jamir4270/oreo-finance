@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import * as LucideIcons from "lucide-react";
+import { DynamicIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -36,8 +36,6 @@ interface BudgetCardProps {
 }
 
 export function BudgetCard({ budget, baseCurrency, onClick }: BudgetCardProps) {
-  const iconName = budget.category?.icon || "Tag";
-  const Icon = (LucideIcons as any)[iconName] || LucideIcons.Tag;
 
   const effectiveLimit = budget.convertedEffectiveLimit;
   const spent = budget.computedSpent;
@@ -65,7 +63,7 @@ export function BudgetCard({ budget, baseCurrency, onClick }: BudgetCardProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-oreo-lavender/50 text-oreo-slate-purple">
-            <Icon className="h-5 w-5" />
+            <DynamicIcon icon={budget.category?.icon} className="h-5 w-5" />
           </div>
           <div className="flex flex-col">
             <h3 className="font-heading text-base font-medium text-foreground">

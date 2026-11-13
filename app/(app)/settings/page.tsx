@@ -1,19 +1,13 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getAuthUser } from "@/lib/supabase/server";
 import SettingsClient from "@/components/settings/SettingsClient";
 
 export default async function SettingsPage() {
-  const supabase = await createClient();
-
-  // Get current user
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) {
+  const user = await getAuthUser();
+  if (!user) {
     redirect("/login");
   }
+  const supabase = await createClient();
 
   // Get user profile for base currency
   const { data: profile, error: profileError } = await supabase

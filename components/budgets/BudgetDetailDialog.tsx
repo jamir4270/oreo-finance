@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import * as LucideIcons from "lucide-react";
-import { Pencil, Trash2, Calendar, Target, TrendingUp, TrendingDown } from "lucide-react";
+import { DynamicIcon } from "@/lib/icons";
+import { Pencil, Trash2, Calendar, Target, TrendingUp, TrendingDown, Receipt, Wallet } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -34,8 +34,6 @@ export function BudgetDetailDialog({
 }: BudgetDetailDialogProps) {
   if (!budget) return null;
 
-  const iconName = budget.category?.icon || "Tag";
-  const Icon = (LucideIcons as any)[iconName] || LucideIcons.Tag;
 
   const period = budget.currentPeriod;
   const effectiveLimit = budget.convertedEffectiveLimit;
@@ -68,7 +66,7 @@ export function BudgetDetailDialog({
 
         <div className="flex flex-col items-center justify-center gap-4 py-6">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-oreo-lavender/50 text-oreo-slate-purple">
-            <Icon className="h-8 w-8" />
+            <DynamicIcon icon={budget.category?.icon} className="h-8 w-8" />
           </div>
           <div className="flex flex-col items-center gap-1 w-full min-w-0">
             <h2 className="text-xl font-semibold text-foreground truncate max-w-full px-4 text-center">
@@ -134,7 +132,7 @@ export function BudgetDetailDialog({
 
           {/* Actual Spent */}
           <div className="flex items-start gap-3 w-full min-w-0">
-            <LucideIcons.Receipt className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+            <Receipt className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
             <div className="flex flex-col min-w-0 flex-1">
               <span className="text-sm font-medium text-foreground">Spent</span>
               <span className={cn("text-sm font-mono font-semibold", isOverBudget ? "text-oreo-mauve" : "text-foreground")}>
@@ -145,7 +143,7 @@ export function BudgetDetailDialog({
 
           {/* Remaining */}
           <div className="flex items-start gap-3 w-full min-w-0">
-            <LucideIcons.Wallet className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+            <Wallet className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
             <div className="flex flex-col min-w-0 flex-1">
               <span className="text-sm font-medium text-foreground">
                 {isOverBudget ? "Over Budget" : "Remaining"}

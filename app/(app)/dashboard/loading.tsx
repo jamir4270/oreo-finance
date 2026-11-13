@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export default function DashboardLoading() {
   return (
-    <div className="flex flex-col gap-8 p-6 md:p-10 max-w-5xl mx-auto w-full">
+    <div className="flex flex-col gap-8 p-6 md:p-10 max-w-5xl mx-auto w-full" aria-busy="true" aria-label="Loading">
       {/* Header & Balance */}
       <div className="flex flex-col items-center text-center gap-2 mt-4 md:mt-8">
         <Skeleton className="h-4 w-24" />

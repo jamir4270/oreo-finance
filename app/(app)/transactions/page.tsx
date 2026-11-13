@@ -1,24 +1,27 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getAuthUser } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { TransactionsPageClient } from "@/components/transactions/TransactionsPageClient";
 import { getExchangeRates } from "@/lib/exchange-rates";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Ids are interpolated into a PostgREST filter string, so anything else is dropped.
+const idParam = (v: string | string[] | undefined) => (typeof v === "string" && UUID_RE.test(v) ? v : "all");
+
 export default async function TransactionsPage(props: { searchParams: SearchParams }) {
   const searchParams = await props.searchParams;
-  const supabase = await createClient();
-
-  const { data: userData, error: userError } = await supabase.auth.getUser();
-  if (userError || !userData.user) {
+  const user = await getAuthUser();
+  if (!user) {
     redirect("/login");
   }
+  const supabase = await createClient();
 
   // Parse search params
-  const page = typeof searchParams.page === 'string' ? Math.max(1, parseInt(searchParams.page, 10)) : 1;
+  const page = typeof searchParams.page === 'string' ? Math.max(1, parseInt(searchParams.page, 10) || 1) : 1;
   const filterType = typeof searchParams.type === 'string' ? searchParams.type : "all";
-  const filterAccount = typeof searchParams.account === 'string' ? searchParams.account : "all";
-  const filterCategory = typeof searchParams.category === 'string' ? searchParams.category : "all";
+  const filterAccount = idParam(searchParams.account);
+  const filterCategory = idParam(searchParams.category);
   const dateRange = typeof searchParams.dateRange === 'string' ? searchParams.dateRange : "all_time";
 
   const pageSize = 50;
@@ -48,7 +51,7 @@ export default async function TransactionsPage(props: { searchParams: SearchPara
       to_account:accounts!transactions_to_account_id_fkey (name, currency),
       category:categories (name, icon, txn_type)
     `, { count: "exact" })
-    .eq("user_id", userData.user.id);
+    .eq("user_id", user.id);
 
   if (filterType !== "all") {
     query = query.eq("type", filterType);
@@ -71,26 +74,15 @@ export default async function TransactionsPage(props: { searchParams: SearchPara
     .order("created_at", { ascending: false })
     .range((page - 1) * pageSize, page * pageSize - 1);
 
-  const { data: transactions, count } = await query;
-  
+  const [{ data: transactions, count }, { data: accounts }, { data: categories }, { rates, isStale }] = await Promise.all([
+    query,
+    // Accounts and categories for the dialog
+    supabase.from("accounts").select("id, name, currency").eq("user_id", user.id).order("name"),
+    supabase.from("categories").select("id, name, icon, txn_type").eq("user_id", user.id).order("name"),
+    getExchangeRates(),
+  ]);
+
   const totalPages = count ? Math.ceil(count / pageSize) : 1;
-
-  // Fetch accounts for the dialog
-  const { data: accounts } = await supabase
-    .from("accounts")
-    .select("id, name, currency")
-    .eq("user_id", userData.user.id)
-    .order("name");
-
-  // Fetch categories for the dialog
-  const { data: categories } = await supabase
-    .from("categories")
-    .select("id, name, icon, txn_type")
-    .eq("user_id", userData.user.id)
-    .order("name");
-
-  // Fetch exchange rates
-  const { rates, isStale } = await getExchangeRates();
   const { StaleRateBanner } = await import("@/components/ui/stale-rate-banner");
 
   return (

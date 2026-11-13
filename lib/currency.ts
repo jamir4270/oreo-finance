@@ -26,6 +26,21 @@ export function convertCurrency(
   return (amount / fromRate) * toRate;
 }
 
+/**
+ * Rounds to the currency's minor unit (2 decimals for PHP/USD, 0 for JPY/KRW/VND),
+ * so converted amounts aren't stored as 12.3456789.
+ */
+export function roundToCurrency(amount: number, currency: string): number {
+  let digits = 2;
+  try {
+    digits = new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions().maximumFractionDigits ?? 2;
+  } catch {
+    // Unknown code: keep 2 decimals
+  }
+  const factor = 10 ** digits;
+  return Math.round((amount + Number.EPSILON) * factor) / factor;
+}
+
 export const CURRENCIES = [
   { code: "PHP", name: "Philippine Peso", symbol: "₱" },
   { code: "USD", name: "US Dollar", symbol: "$" },

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { MoreVertical, Trash2, Pencil, ShieldAlert } from "lucide-react";
-import * as LucideIcons from "lucide-react";
+import { DynamicIcon } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,7 +20,6 @@ interface CategoryCardProps {
 }
 
 export function CategoryCard({ category, onEdit, onDelete }: CategoryCardProps) {
-  const Icon = category.icon ? (LucideIcons as any)[category.icon] : LucideIcons.Tag;
 
   let typeColors = "bg-card border-border";
   let iconColors = "bg-oreo-lavender/50 text-oreo-slate-purple";
@@ -40,7 +39,7 @@ export function CategoryCard({ category, onEdit, onDelete }: CategoryCardProps) 
     <div className={`flex items-center justify-between rounded-full border p-2 pr-4 shadow-sm transition-all hover:shadow-md overflow-hidden ${typeColors}`}>
       <div className="flex items-center gap-3 min-w-0">
         <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${iconColors}`}>
-          {Icon && <Icon className="h-5 w-5" />}
+          <DynamicIcon icon={category.icon} className="h-5 w-5" />
         </div>
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-2">

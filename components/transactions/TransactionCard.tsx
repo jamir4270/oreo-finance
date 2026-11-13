@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { MoreVertical, Trash2, Pencil } from "lucide-react";
-import * as LucideIcons from "lucide-react";
+import { DynamicIcon } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,8 +22,6 @@ interface TransactionCardProps {
 export function TransactionCard({ transaction, onClick }: TransactionCardProps) {
   const isExpense = transaction.type === "expense";
   const isTransfer = transaction.type === "transfer";
-  const iconName = transaction.category?.icon || "Tag";
-  const Icon = (LucideIcons as any)[iconName] || LucideIcons.Tag;
 
   // Design Spec compliance for transaction colors
   const amountColor = isTransfer ? "text-foreground" : isExpense ? "text-oreo-mauve" : "text-oreo-dusty-teal";
@@ -39,7 +37,7 @@ export function TransactionCard({ transaction, onClick }: TransactionCardProps) 
       <div className="flex items-center gap-3 overflow-hidden">
         {/* Category Icon */}
         <div className="flex shrink-0 items-center justify-center text-oreo-slate-purple">
-          <Icon className="h-4 w-4" />
+          <DynamicIcon icon={transaction.category?.icon} className="h-4 w-4" />
         </div>
 
         {/* Details */}

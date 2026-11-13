@@ -48,7 +48,6 @@ export const metadata: Metadata = {
 };
 
 
-import { FakeSplash } from "@/components/landing/FakeSplash";
 import { Toaster } from "@/components/ui/sonner";
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -59,7 +58,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <Analytics />
-        <FakeSplash />
         {children}
         <Toaster position="top-right" richColors />
         <PwaRegistration />

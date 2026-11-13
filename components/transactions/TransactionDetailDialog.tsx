@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import * as LucideIcons from "lucide-react";
+import { DynamicIcon } from "@/lib/icons";
 import { Pencil, Trash2, Calendar, Wallet, Tag as TagIcon, AlignLeft } from "lucide-react";
 import {
   Dialog,
@@ -32,8 +32,6 @@ export function TransactionDetailDialog({
 
   const isExpense = transaction.type === "expense";
   const isTransfer = transaction.type === "transfer";
-  const iconName = transaction.category?.icon || "Tag";
-  const Icon = (LucideIcons as any)[iconName] || LucideIcons.Tag;
 
   const amountColor = isTransfer ? "text-foreground" : isExpense ? "text-oreo-mauve" : "text-oreo-dusty-teal";
   const prefix = isTransfer ? "" : isExpense ? "-" : "+";
@@ -56,7 +54,7 @@ export function TransactionDetailDialog({
 
         <div className="flex flex-col items-center justify-center gap-4 py-6">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-oreo-lavender/50 text-oreo-slate-purple">
-            <Icon className="h-8 w-8" />
+            <DynamicIcon icon={transaction.category?.icon} className="h-8 w-8" />
           </div>
           <div className="flex flex-col items-center gap-1 w-full min-w-0">
             <h2 className="text-xl font-semibold text-foreground truncate max-w-full px-4 text-center">

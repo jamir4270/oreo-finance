@@ -1,74 +1,47 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getAuthUser } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { Mascot } from "@/components/ui/mascot";
-import * as LucideIcons from "lucide-react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Wallet } from "lucide-react";
+import { DynamicIcon } from "@/lib/icons";
 import { getExchangeRates } from "@/lib/exchange-rates";
 import { convertCurrency, getCurrencySymbol } from "@/lib/currency";
 import { StaleRateBanner } from "@/components/ui/stale-rate-banner";
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getAuthUser();
   if (!user) return null;
+  const supabase = await createClient();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("base_currency")
-    .eq("id", user.id)
-    .single();
+  const [{ data: profile }, { rates, isStale }, { data: rawAccounts }, { data: balances }, { data: transactions }] = await Promise.all([
+    supabase.from("profiles").select("base_currency").eq("id", user.id).single(),
+    getExchangeRates(),
+    supabase.from("accounts").select("*").eq("user_id", user.id),
+    supabase.from("account_balances").select("account_id, balance").eq("user_id", user.id),
+    supabase
+      .from("transactions")
+      .select(`
+        *,
+        category:categories(name, icon),
+        account:accounts!transactions_account_id_fkey(currency)
+      `)
+      .eq("user_id", user.id)
+      .order("txn_date", { ascending: false })
+      .limit(5),
+  ]);
 
   const baseCurrency = profile?.base_currency || "USD";
   const currencySymbol = getCurrencySymbol(baseCurrency);
-  const { rates, isStale } = await getExchangeRates();
 
-  const { data: rawAccounts } = await supabase
-    .from("accounts")
-    .select(`
-      *,
-      outgoing_transactions:transactions!transactions_account_id_fkey(amount, type),
-      incoming_transfers:transactions!transactions_to_account_id_fkey(to_amount, type)
-    `)
-    .eq("user_id", user.id);
-
-  const allAccounts = (rawAccounts || []).map((account: any) => {
-    let balance = 0;
-    if (account.outgoing_transactions) {
-      account.outgoing_transactions.forEach((txn: any) => {
-        if (txn.type === "income") balance += Number(txn.amount);
-        else if (txn.type === "expense") balance -= Number(txn.amount);
-        else if (txn.type === "transfer") balance -= Number(txn.amount);
-      });
-    }
-    if (account.incoming_transfers) {
-      account.incoming_transfers.forEach((txn: any) => {
-        if (txn.type === "transfer" && txn.to_amount) balance += Number(txn.to_amount);
-      });
-    }
-    return { ...account, balance };
-  });
+  const balanceById = new Map((balances || []).map((b) => [b.account_id, Number(b.balance)]));
+  const allAccounts = (rawAccounts || []).map((account) => ({ ...account, balance: balanceById.get(account.id) ?? 0 }));
 
   const activeAccounts = (allAccounts || []).filter(a => !a.archived_at).map(a => ({
     ...a,
     convertedBalance: convertCurrency(a.balance, a.currency, baseCurrency, rates)
   }));
   const accounts = [...activeAccounts].sort((a, b) => b.convertedBalance - a.convertedBalance).slice(0, 3);
-
-  const { data: transactions } = await supabase
-    .from("transactions")
-    .select(`
-      *,
-      category:categories(name, icon),
-      account:accounts!transactions_account_id_fkey(currency)
-    `)
-    .eq("user_id", user.id)
-    .order("txn_date", { ascending: false })
-    .limit(5);
 
   const totalBalance = activeAccounts.reduce((sum, acc) => sum + acc.convertedBalance, 0);
 
@@ -120,12 +93,11 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               {accounts?.length ? accounts.map((acc) => {
-                const Icon = acc.icon ? (LucideIcons as any)[acc.icon] : LucideIcons.Wallet;
                 return (
                   <div key={acc.id} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-oreo-lavender/50 text-oreo-slate-purple">
-                        {Icon && <Icon className="h-5 w-5" />}
+                        <DynamicIcon icon={acc.icon} fallback={Wallet} className="h-5 w-5" />
                       </div>
                       <div className="flex flex-col">
                         <span className="font-medium text-sm text-foreground">{acc.name}</span>
@@ -153,16 +125,14 @@ export default async function DashboardPage() {
               {transactions?.length ? transactions.map((txn) => {
                 const isExpense = txn.type === "expense";
                 const isTransfer = txn.type === "transfer";
-                const catIcon = txn.category?.icon || "Tag";
-                const Icon = (LucideIcons as any)[catIcon] || LucideIcons.Tag;
-                const txnCurrency = (txn as any).account?.currency || baseCurrency;
+                                const txnCurrency = (txn as any).account?.currency || baseCurrency;
                 const convertedAmount = convertCurrency(Number(txn.amount), txnCurrency, baseCurrency, rates);
                 const prefix = isTransfer ? "" : isExpense ? "-" : "+";
                 return (
                   <div key={txn.id} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                        <Icon className="h-5 w-5" />
+                        <DynamicIcon icon={txn.category?.icon} className="h-5 w-5" />
                       </div>
                       <div className="flex flex-col">
                         <span className="font-medium text-sm text-foreground">{txn.category?.name || "Uncategorized"}</span>

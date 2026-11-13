@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getAuthUser } from "@/lib/supabase/server";
 import { AppShell } from "@/components/layout/AppShell";
 
 /**
@@ -16,34 +16,23 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getAuthUser();
   if (!user) {
     redirect("/login");
   }
-
-  // Fetch accounts and categories for the global Add Transaction modal
-  const { data: accounts } = await supabase
-    .from("accounts")
-    .select("id, name, currency")
-    .eq("user_id", user.id)
-    .order("name");
-
-  const { data: categories } = await supabase
-    .from("categories")
-    .select("id, name, icon, txn_type")
-    .eq("user_id", user.id)
-    .order("name");
+  const supabase = await createClient();
 
   const today = new Date().toISOString().split('T')[0];
-  const { count: dailyTxnCount } = await supabase
-    .from("transactions")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .eq("txn_date", today);
+  // Accounts and categories feed the global Add Transaction modal
+  const [{ data: accounts }, { data: categories }, { count: dailyTxnCount }] = await Promise.all([
+    supabase.from("accounts").select("id, name, currency").eq("user_id", user.id).order("name"),
+    supabase.from("categories").select("id, name, icon, txn_type").eq("user_id", user.id).order("name"),
+    supabase
+      .from("transactions")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("txn_date", today),
+  ]);
 
   return (
     <AppShell accounts={accounts || []} categories={categories || []} dailyTxnCount={dailyTxnCount || 0}>

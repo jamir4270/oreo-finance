@@ -80,14 +80,40 @@ export function TransactionDialog({
   const actionWithId = transaction ? updateTransaction.bind(null, transaction.id) : createTransaction;
   const [state, formAction] = useActionState(actionWithId, null);
 
+  // New transactions submit optimistically: the sheet closes at once and saves in the background.
+  // On failure it reopens pre-filled from `draft`, so nothing typed is lost.
+  // Edits wait for the server: closing clears the parent's editing target, so they couldn't reopen.
+  const [draft, setDraft] = React.useState<FormData | null>(null);
+  const inFlightRef = React.useRef<FormData | null>(null);
+  const toastIdRef = React.useRef<string | number | undefined>(undefined);
   const lastFiredStateRef = React.useRef(state);
 
-  React.useEffect(() => {
-    if (state?.success && state !== lastFiredStateRef.current) {
-      lastFiredStateRef.current = state;
+  const submit = (formData: FormData) => {
+    inFlightRef.current = formData;
+    if (!isEdit) {
+      setDraft(null);
       setOpen(false);
+      toastIdRef.current = toast.loading("Saving transaction...");
+    }
+    formAction(formData);
+  };
+
+  const handleOpenChange = (next: boolean) => {
+    if (!next) setDraft(null); // user dismissed: drop any failed draft
+    setOpen(next);
+  };
+
+  React.useEffect(() => {
+    if (!state || state === lastFiredStateRef.current) return;
+    lastFiredStateRef.current = state;
+    const id = toastIdRef.current;
+    const submitted = inFlightRef.current;
+    inFlightRef.current = null;
+    if (state.success) {
+      if (isEdit) setOpen(false);
       toast.success(isEdit ? "Transaction updated" : "Transaction added", {
-        description: `${amountStr} ${type}`
+        id,
+        description: submitted ? `${submitted.get("input_amount")} ${submitted.get("type")}` : undefined,
       });
       if (state.warning) {
         // Slight delay so it doesn't overlap the success toast
@@ -95,10 +121,20 @@ export function TransactionDialog({
           toast.warning(state.warning);
         }, 300);
       }
+    } else if (state.error && !isEdit && submitted) {
+      toast.error("Couldn't save transaction", { id, description: state.error });
+      setDraft(submitted);
+      setType(submitted.get("type") as string);
+      setAmountStr(submitted.get("input_amount") as string);
+      setAccountId(submitted.get("account_id") as string);
+      setToAccountId((submitted.get("to_account_id") as string | null) || "");
+      setInputCurrency(submitted.get("input_currency") as string);
+      setOpen(true);
     }
-  }, [state, setOpen, isEdit, amountStr, type]);
+  }, [state, setOpen, isEdit]);
 
   React.useEffect(() => {
+    if (draft) return; // reopened after a failed save: keep what the user entered
     if (open && transaction) {
       setType(transaction.type);
       setAccountId(transaction.account_id);
@@ -114,7 +150,9 @@ export function TransactionDialog({
       setInputCurrency(accounts[0]?.currency || "USD");
       setAmountStr("");
     }
-  }, [open, transaction, accounts]);
+  }, [open, transaction, accounts, draft]);
+
+  const draftValue = (name: string) => (draft?.get(name) as string | null) ?? undefined;
 
   const filteredCategories = categories.filter((c) => c.txn_type === type);
 
@@ -147,12 +185,12 @@ export function TransactionDialog({
   return (
     <ResponsiveSheet 
       open={open} 
-      onOpenChange={setOpen}
+      onOpenChange={handleOpenChange}
       trigger={trigger}
       title={isEdit ? "Edit Transaction" : "Log Transaction"}
       description={isEdit ? "Update the details of your transaction." : "Add a new expense, income or transfer."}
     >
-      <form key={transaction?.id || "new"} action={formAction} className="flex flex-col gap-4 mt-2">
+      <form key={transaction?.id || "new"} action={submit} className="flex flex-col gap-4 mt-2">
           {/* Type Selector Tiles */}
           <div className="w-full">
             {isEdit ? (
@@ -243,7 +281,7 @@ export function TransactionDialog({
                 <select
                   id="category_id"
                   name="category_id"
-                  defaultValue={transaction?.category_id || (filteredCategories[0]?.id || "")}
+                  defaultValue={draftValue("category_id") ?? (transaction?.category_id || (filteredCategories[0]?.id || ""))}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   required
                 >
@@ -284,7 +322,7 @@ export function TransactionDialog({
               <select
                 id="category_id"
                 name="category_id"
-                defaultValue={transaction?.category_id || (filteredCategories[0]?.id || "")}
+                defaultValue={draftValue("category_id") ?? (transaction?.category_id || (filteredCategories[0]?.id || ""))}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 required
               >
@@ -314,9 +352,10 @@ export function TransactionDialog({
               name="txn_date"
               type="date"
               defaultValue={
-                transaction?.txn_date 
-                  ? transaction.txn_date 
-                  : new Date().toISOString().split("T")[0]
+                draftValue("txn_date") ??
+                (transaction?.txn_date
+                  ? transaction.txn_date
+                  : new Date().toISOString().split("T")[0])
               }
               required
             />
@@ -328,7 +367,7 @@ export function TransactionDialog({
               id="note"
               name="note"
               placeholder="What was this for?"
-              defaultValue={transaction?.note || ""}
+              defaultValue={draftValue("note") ?? (transaction?.note || "")}
               className="resize-none w-full break-words whitespace-pre-wrap"
               rows={2}
             />

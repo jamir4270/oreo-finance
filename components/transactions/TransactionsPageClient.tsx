@@ -43,7 +43,7 @@ interface TransactionsPageClientProps {
 }
 
 export function TransactionsPageClient({ 
-  transactions, 
+  transactions: serverTransactions, 
   accounts, 
   categories, 
   exchangeRates,
@@ -59,8 +59,11 @@ export function TransactionsPageClient({
   const [editingTxn, setEditingTxn] = React.useState<TransactionData | null>(null);
   const [viewingTxn, setViewingTxn] = React.useState<TransactionData | null>(null);
   const [deletingTxn, setDeletingTxn] = React.useState<TransactionData | null>(null);
-  const [deleteError, setDeleteError] = React.useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = React.useState(false);
+  // Deleted rows vanish immediately; React restores them if the server call fails.
+  const [transactions, removeOptimistic] = React.useOptimistic(
+    serverTransactions,
+    (list, id: string) => list.filter((t) => t.id !== id)
+  );
   const [isCreateOpen, setIsCreateOpen] = React.useState(false);
   const [isPending, startTransition] = React.useTransition();
 
@@ -105,26 +108,23 @@ export function TransactionsPageClient({
   // Sort dates descending (newest first)
   const sortedDates = Object.keys(groupedTransactions).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
-  const handleDelete = async () => {
-    if (!deletingTxn) return;
-    
-    setIsDeleting(true);
-    setDeleteError(null);
-    
-    const result = await deleteTransaction(deletingTxn.id);
-    
-    setIsDeleting(false);
-    
-    if (result?.error) {
-      setDeleteError(result.error);
-      toast.error(result.error);
-    } else {
-      const deletedAmount = deletingTxn.amount;
-      setDeletingTxn(null);
-      toast.success("Transaction deleted", {
-        description: `Removed transaction of ${deletedAmount}`
-      });
-    }
+  const handleDelete = () => {
+    const txn = deletingTxn;
+    if (!txn) return;
+    setDeletingTxn(null);
+
+    // Separate from startTransition above so the list doesn't dim while deleting.
+    React.startTransition(async () => {
+      removeOptimistic(txn.id);
+      const result = await deleteTransaction(txn.id);
+      if (result?.error) {
+        toast.error("Couldn't delete transaction", { description: result.error });
+      } else {
+        toast.success("Transaction deleted", {
+          description: `Removed transaction of ${txn.amount}`
+        });
+      }
+    });
   };
 
   const emptyStateJsx = (
@@ -326,10 +326,7 @@ export function TransactionsPageClient({
       />
 
       <AlertDialog open={!!deletingTxn} onOpenChange={(open) => {
-        if (!open && !isDeleting) {
-          setDeletingTxn(null);
-          setDeleteError(null);
-        }
+        if (!open) setDeletingTxn(null);
       }}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -338,24 +335,17 @@ export function TransactionsPageClient({
               This will permanently delete this transaction from your ledger.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          
-          {deleteError && (
-            <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-              {deleteError}
-            </div>
-          )}
 
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={(e) => {
                 e.preventDefault();
                 handleDelete();
               }}
-              disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
