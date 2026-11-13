@@ -20,7 +20,6 @@ export function SafeToSpendCard({ perDay, left, active, overspent, baseCurrency,
     return (
       <Link
         href="/budgets"
-        transitionTypes={["nav-forward"]}
         className="flex items-center gap-4 rounded-3xl bg-card p-5 shadow-oreo-sm transition-transform duration-150 active:scale-[0.98]"
       >
         <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-oreo-lavender/60 text-oreo-slate-purple">
@@ -39,7 +38,6 @@ export function SafeToSpendCard({ perDay, left, active, overspent, baseCurrency,
   return (
     <Link
       href="/budgets"
-      transitionTypes={["nav-forward"]}
       aria-label={`Safe to spend today: ${currencySymbol}${formatAmount(perDay, baseCurrency)}. View budgets`}
       className="flex flex-col gap-1 rounded-3xl bg-card p-5 shadow-oreo-sm transition-transform duration-150 active:scale-[0.98]"
     >
