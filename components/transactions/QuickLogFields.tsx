@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { localDay } from "@/lib/dates";
-import { Calendar, ChevronDown, Delete, NotebookPen, Wallet, ArrowRight } from "lucide-react";
+import { Calendar, ChevronDown, Delete, NotebookPen, Wallet, ArrowRight, Repeat } from "lucide-react";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { DynamicIcon } from "@/lib/icons";
 import { applyKey, type KeypadKey } from "@/lib/keypad";
@@ -29,6 +29,7 @@ interface QuickLogFieldsProps {
   onCategoryChange: (id: string) => void;
   defaultDate: string;
   defaultNote?: string;
+  defaultRepeat?: string;
   convertedAmountStr?: string;
   error?: string;
 }
@@ -38,6 +39,8 @@ const TYPE_OPTIONS: { value: TxnType; label: string }[] = [
   { value: "income", label: "Income" },
   { value: "transfer", label: "Transfer" },
 ];
+
+const REPEAT_LABELS: Record<string, string> = { daily: "Daily", weekly: "Weekly", monthly: "Monthly", yearly: "Yearly" };
 
 const KEYS: KeypadKey[] = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "back"];
 
@@ -70,11 +73,12 @@ export function QuickLogFields(props: QuickLogFieldsProps) {
   const {
     type, onTypeChange, amountStr, onAmountChange, inputCurrency, onCurrencyChange,
     accounts, accountId, onAccountChange, toAccountId, onToAccountChange,
-    categories, categoryId, onCategoryChange, defaultDate, defaultNote, convertedAmountStr, error,
+    categories, categoryId, onCategoryChange, defaultDate, defaultNote, defaultRepeat, convertedAmountStr, error,
   } = props;
 
   const [date, setDate] = React.useState(defaultDate);
   const [showNote, setShowNote] = React.useState(!!defaultNote);
+  const [repeat, setRepeat] = React.useState(defaultRepeat ?? "never");
   const decimals = currencyDecimals(inputCurrency);
   const isTransfer = type === "transfer";
   const account = accounts.find((a) => a.id === accountId);
@@ -188,6 +192,21 @@ export function QuickLogFields(props: QuickLogFieldsProps) {
         <PickerPill icon={<Calendar className="size-4 shrink-0 text-muted-foreground" aria-hidden />} label={dateLabel}>
           <input type="date" aria-label="Date" name="txn_date" value={date} required onChange={(e) => e.target.value && setDate(e.target.value)} className={overlay} />
         </PickerPill>
+
+        {!isTransfer && (
+          <PickerPill
+            icon={<Repeat className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
+            label={repeat === "never" ? "Repeat" : REPEAT_LABELS[repeat]}
+          >
+            <select aria-label="Repeat" name="repeat" value={repeat} onChange={(e) => setRepeat(e.target.value)} className={overlay}>
+            <option value="never">Never</option>
+            <option value="daily">Every day</option>
+            <option value="weekly">Every week</option>
+            <option value="monthly">Every month</option>
+            <option value="yearly">Every year</option>
+            </select>
+          </PickerPill>
+        )}
 
         {!showNote && (
           <button

@@ -9,6 +9,7 @@ import { logout } from "@/app/actions/auth";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ConfirmDestructive } from "@/components/ui/confirm-destructive";
+import { RecurringList, type RecurringRule } from "@/components/settings/RecurringList";
 import {
   Dialog,
   DialogContent,
@@ -23,11 +24,13 @@ import { CURRENCIES } from "@/lib/currency";
 interface SettingsClientProps {
   email: string;
   baseCurrency: string;
+  recurring: RecurringRule[];
 }
 
 export default function SettingsClient({
   email,
   baseCurrency,
+  recurring,
 }: SettingsClientProps) {
   const [currency, setCurrency] = useState(baseCurrency);
   const [isPending, startTransition] = useTransition();
@@ -139,6 +142,8 @@ export default function SettingsClient({
           </Dialog>
         </Card>
       </section>
+
+      <RecurringList rules={recurring} />
 
       {/* Data Section */}
       <section className="flex flex-col gap-3">

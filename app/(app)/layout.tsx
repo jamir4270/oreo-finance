@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { syncRecurring } from "@/lib/recurring";
 import { createClient, getAuthUser } from "@/lib/supabase/server";
 import { AppShell } from "@/components/layout/AppShell";
 import { getToday } from "@/lib/today";
@@ -22,6 +23,7 @@ export default async function AppLayout({
     redirect("/login");
   }
   const supabase = await createClient();
+  await syncRecurring(); // create any due recurring entries before reading
 
   const today = await getToday();
   // Accounts and categories feed the global Add Transaction modal

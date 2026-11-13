@@ -70,6 +70,23 @@ export function roundToCurrency(amount: number, currency: string): number {
 }
 
 /**
+ * The base-currency value to freeze on a transaction at save time (see amountIn).
+ * Both null when there's no base currency or the rate is unavailable.
+ */
+export function baseSnapshot(
+  amount: number,
+  accountCurrency: string,
+  baseCurrency: string | null,
+  rates: Record<string, number>
+): { base_amount: number | null; base_currency: string | null } {
+  if (!baseCurrency) return { base_amount: null, base_currency: null };
+  const converted = tryConvertCurrency(amount, accountCurrency, baseCurrency, rates);
+  return converted === null
+    ? { base_amount: null, base_currency: null }
+    : { base_amount: roundToCurrency(converted, baseCurrency), base_currency: baseCurrency };
+}
+
+/**
  * A transaction's amount in `currency`, preferring the value stored when it was saved
  * (base_amount, at that day's rate) so history doesn't drift with exchange rates. Falls
  * back to live conversion for older rows or when `currency` differs from what was stored.

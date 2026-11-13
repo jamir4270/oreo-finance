@@ -1,4 +1,5 @@
 import { createClient, getAuthUser } from "@/lib/supabase/server";
+import { syncRecurring } from "@/lib/recurring";
 import { getToday } from "@/lib/today";
 import { dateRangeBounds } from "@/lib/dates";
 import { PageTransition } from "@/components/layout/page-transition";
@@ -19,6 +20,7 @@ export default async function TransactionsPage(props: { searchParams: SearchPara
     redirect("/login");
   }
   const supabase = await createClient();
+  await syncRecurring(); // create any due recurring entries before reading
 
   // Parse search params
   const page = typeof searchParams.page === 'string' ? Math.max(1, parseInt(searchParams.page, 10) || 1) : 1;

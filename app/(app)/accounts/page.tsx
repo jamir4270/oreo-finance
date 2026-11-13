@@ -1,4 +1,5 @@
 import { createClient, getAuthUser } from "@/lib/supabase/server";
+import { syncRecurring } from "@/lib/recurring";
 import { PageTransition } from "@/components/layout/page-transition";
 import { getExchangeRates } from "@/lib/exchange-rates";
 import { redirect } from "next/navigation";
@@ -10,6 +11,7 @@ export default async function AccountsPage() {
     redirect("/login");
   }
   const supabase = await createClient();
+  await syncRecurring(); // create any due recurring entries before reading
 
   const [{ data: profile }, { data: rawAccounts }, { data: balances }, { rates }] = await Promise.all([
     supabase.from("profiles").select("base_currency").eq("id", user.id).single(),

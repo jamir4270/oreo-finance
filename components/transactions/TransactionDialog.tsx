@@ -259,6 +259,7 @@ export function TransactionDialog({
             onCategoryChange={setCategoryId}
             defaultDate={draftValue("txn_date") ?? localDay()}
             defaultNote={draftValue("note")}
+            defaultRepeat={draftValue("repeat")}
             convertedAmountStr={convertedAmountStr}
             error={state?.error}
           />
@@ -414,6 +415,24 @@ export function TransactionDialog({
               {isStale && (
                 <div className="text-amber-600 text-xs mt-1">Rate may be up to a day old</div>
               )}
+            </div>
+          )}
+
+          {!isEdit && type !== "transfer" && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="repeat">Repeat</Label>
+              <select
+                id="repeat"
+                name="repeat"
+                defaultValue={draftValue("repeat") ?? "never"}
+                className="flex h-10 pointer-coarse:h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base pointer-fine:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+            <option value="never">Never</option>
+            <option value="daily">Every day</option>
+            <option value="weekly">Every week</option>
+            <option value="monthly">Every month</option>
+            <option value="yearly">Every year</option>
+              </select>
             </div>
           )}
 

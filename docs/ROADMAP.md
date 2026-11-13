@@ -56,7 +56,7 @@ This doc has four parts: (1) an honest product critique, (2) bugs and debt found
 ### Upgrades (features, in value order)
 1. **Safe-to-spend** on the dashboard: remaining budget ÷ days left, today's figure first.
 2. **Quick log**: keypad-first entry, a remembered last account, the top 6 categories as chips, and optional "repeat last".
-3. **Reminders** via Web Push. This works on iOS 16.4+ when the PWA is installed, and the schema fields already exist.
+3. **Reminders: deferred to the native app.** Web Push on iOS only works once the PWA is installed to the Home Screen, which most users never do, and it offers no scheduled local notifications. That makes it a poor return on effort compared with native notifications in an Expo app. `profiles.reminder_time` and `reminder_enabled` stay in the schema for then.
 4. **Recurring transactions** (allowance, subscriptions).
 5. **CSV export** (already in backlog G4.1).
 6. Goals: un-halt only after the above. Retention matters more than more features.
@@ -120,7 +120,7 @@ Done when: Lighthouse mobile ≥ 90 on the dashboard, the first-load JS of `/tra
 **Haptics:** iOS Safari has no Vibration API, so don't fake it. This is one of the concrete reasons for the native path in §3.
 
 ### Phase R: Retention (after S/U/C)
-✅ Safe-to-spend is done (`SafeToSpendCard`, `safeToSpend()` and `loadCurrentBudgets()`, the last now shared by the dashboard, budgets and analytics) → ✅ CSV export is done (`/api/export/transactions`, `lib/csv.ts` with a formula-injection guard, Settings → Data) → Web Push reminders → recurring transactions → CSV export. Fix bugs #1–#6 from §2 before or alongside Phase S, because they affect money shown to users. #1 and #3 are one-line fixes plus a test.
+✅ Safe-to-spend is done (`SafeToSpendCard`, `safeToSpend()` and `loadCurrentBudgets()`, the last now shared by the dashboard, budgets and analytics) → ✅ CSV export is done (`/api/export/transactions`, `lib/csv.ts` with a formula-injection guard, Settings → Data) → ✅ Recurring transactions are done (the Repeat option when logging; `lib/recurrence.ts` + `lib/recurring.ts` create due entries when the app opens; Settings → Recurring to stop one; migration `20261115000000` is applied). ⏸ Reminders are deferred to the native app (see §3). All bugs #1–#6 from §2 are fixed.
 
 ### Suggested order
 1. Bugs #1, #3, #7, #8 + Vitest + CI (½–1 day)

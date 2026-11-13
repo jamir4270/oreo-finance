@@ -3,7 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { getExchangeRates } from "@/lib/exchange-rates";
-import { tryConvertCurrency, roundToCurrency } from "@/lib/currency";
+import { tryConvertCurrency, roundToCurrency, baseSnapshot } from "@/lib/currency";
+import { FREQUENCIES, occurrenceAfter, type Frequency } from "@/lib/recurrence";
 
 export type TransactionActionState = {
   error?: string;
@@ -105,20 +106,14 @@ async function parseTransactionForm(supabase: SupabaseServerClient, formData: Fo
 
   // Freeze the base-currency value at today's rate so history doesn't drift. If the rate
   // is unavailable, leave it null: reads fall back to live conversion.
-  const base_currency: string | null = profile?.base_currency ?? null;
-  let base_amount: number | null = null;
-  if (base_currency) {
-    const rates = sourceAccount.currency === base_currency ? {} : (await getExchangeRates()).rates;
-    const converted = tryConvertCurrency(amount, sourceAccount.currency, base_currency, rates);
-    base_amount = converted === null ? null : roundToCurrency(converted, base_currency);
-  }
+  const baseCurrency: string | null = profile?.base_currency ?? null;
+  const snapshotRates = !baseCurrency || sourceAccount.currency === baseCurrency ? {} : (await getExchangeRates()).rates;
 
   return {
     fields: {
       type,
       amount,
-      base_amount,
-      base_currency: base_amount === null ? null : base_currency,
+      ...baseSnapshot(amount, sourceAccount.currency, baseCurrency, snapshotRates),
       to_account_id: type === "transfer" ? to_account_id : null,
       to_amount,
       exchange_rate,
@@ -159,14 +154,44 @@ export async function createTransaction(
 
   const now = new Date().toISOString();
 
+  // Repeat (expenses and income only): create the rule first so this entry is its first
+  // occurrence; later ones are created by lib/recurring.ts when the user opens the app.
+  const repeat = formData.get("repeat") as string | null;
+  let recurring_id: string | null = null;
+  if (repeat && repeat !== "never") {
+    if (!FREQUENCIES.includes(repeat as Frequency) || fields.type === "transfer") {
+      return { error: "Transfers can't repeat yet. Choose Never." };
+    }
+    const { data: rule, error: ruleError } = await supabase
+      .from("recurring_transactions")
+      .insert({
+        user_id: userData.user.id,
+        type: fields.type,
+        account_id: fields.account_id,
+        category_id: fields.category_id,
+        amount: fields.amount,
+        note: fields.note,
+        frequency: repeat,
+        start_date: fields.txn_date,
+        next_date: occurrenceAfter(fields.txn_date, repeat as Frequency, fields.txn_date),
+      })
+      .select("id")
+      .single();
+    if (ruleError || !rule) return { error: ruleError?.message ?? "Couldn't set up the repeat." };
+    recurring_id = rule.id;
+  }
+
   const { error } = await supabase.from("transactions").insert({
     user_id: userData.user.id,
     ...fields,
+    recurring_id,
     client_created_at: now,
     synced_at: now,
   });
 
   if (error) {
+    // Don't leave a rule behind for a transaction that was never saved.
+    if (recurring_id) await supabase.from("recurring_transactions").delete().eq("id", recurring_id);
     return { error: error.message };
   }
 

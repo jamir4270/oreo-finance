@@ -1,4 +1,5 @@
 import { createClient, getAuthUser } from "@/lib/supabase/server";
+import { syncRecurring } from "@/lib/recurring";
 import { PageTransition } from "@/components/layout/page-transition";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
@@ -17,6 +18,7 @@ export default async function DashboardPage() {
   const user = await getAuthUser();
   if (!user) return null;
   const supabase = await createClient();
+  await syncRecurring(); // create any due recurring entries before reading
 
   const [{ data: profile }, { rates, isStale }, { data: rawAccounts }, { data: balances }, { data: transactions }, { data: budgets }, today] = await Promise.all([
     supabase.from("profiles").select("base_currency").eq("id", user.id).single(),

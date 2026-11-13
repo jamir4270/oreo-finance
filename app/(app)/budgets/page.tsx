@@ -1,4 +1,5 @@
 import { createClient, getAuthUser } from "@/lib/supabase/server";
+import { syncRecurring } from "@/lib/recurring";
 import { getToday } from "@/lib/today";
 import { PageTransition } from "@/components/layout/page-transition";
 import { redirect } from "next/navigation";
@@ -15,6 +16,7 @@ export default async function BudgetsPage() {
     redirect("/login");
   }
   const supabase = await createClient();
+  await syncRecurring(); // create any due recurring entries before reading
 
   const [{ data: profile }, { data: budgets }, { data: categories }, { rates, isStale }] = await Promise.all([
     supabase.from("profiles").select("base_currency").eq("id", user.id).single(),
