@@ -1,25 +1,18 @@
 "use client";
 
 import * as React from "react";
+import { formatAmount } from "@/lib/currency";
+import { PageTitle } from "@/components/layout/nav-title";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { TransactionData, TxnAccountData, TxnCategoryData, TransactionDialog } from "./TransactionDialog";
 import { TransactionDetailDialog } from "./TransactionDetailDialog";
 import { TransactionCard } from "./TransactionCard";
 import { deleteTransaction } from "@/app/actions/transactions";
 import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { AnimatePresence, motion } from "motion/react";
+import { spring } from "@/lib/motion";
+import { ConfirmDestructive } from "@/components/ui/confirm-destructive";
 import { Button } from "@/components/ui/button";
-import { ActionSheet } from "@/components/ui/action-sheet";
-import { useMediaQuery } from "@/hooks/use-media-query";
 import { Plus, ChevronLeft, ChevronRight, Calendar, Filter, Wallet, Tags } from "lucide-react";
 import {
   Select,
@@ -68,7 +61,6 @@ export function TransactionsPageClient({
   );
   const [isCreateOpen, setIsCreateOpen] = React.useState(false);
   const [isPending, startTransition] = React.useTransition();
-  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const filterType = initialFilters.type;
   const filterAccount = initialFilters.account;
@@ -111,23 +103,35 @@ export function TransactionsPageClient({
   // Sort dates descending (newest first)
   const sortedDates = Object.keys(groupedTransactions).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
+  // Undoable delete (iOS Mail style): the row disappears now, the server delete only runs
+  // after the 5s undo window. Undo just ends the transition, which restores the row.
+  // If the tab closes inside the window nothing is deleted, which fails safe.
+  const deleteWithUndo = (txn: TransactionData) => {
+    // Separate from startTransition above so the list doesn't dim while deleting.
+    React.startTransition(async () => {
+      removeOptimistic(txn.id);
+      const undone = await new Promise<boolean>((resolve) => {
+        toast("Transaction deleted", {
+          description: `${txn.category?.name ?? "Transaction"} · ${formatAmount(txn.amount, txn.account?.currency ?? "")} ${txn.account?.currency ?? ""}`,
+          duration: 5000,
+          action: { label: "Undo", onClick: () => resolve(true) },
+          onAutoClose: () => resolve(false),
+          onDismiss: () => resolve(false),
+        });
+      });
+      if (undone) return;
+      const result = await deleteTransaction(txn.id);
+      if (result?.error) {
+        toast.error("Couldn't delete transaction", { description: result.error });
+      }
+    });
+  };
+
   const handleDelete = () => {
     const txn = deletingTxn;
     if (!txn) return;
     setDeletingTxn(null);
-
-    // Separate from startTransition above so the list doesn't dim while deleting.
-    React.startTransition(async () => {
-      removeOptimistic(txn.id);
-      const result = await deleteTransaction(txn.id);
-      if (result?.error) {
-        toast.error("Couldn't delete transaction", { description: result.error });
-      } else {
-        toast.success("Transaction deleted", {
-          description: `Removed transaction of ${txn.amount}`
-        });
-      }
-    });
+    deleteWithUndo(txn);
   };
 
   const emptyStateJsx = (
@@ -147,9 +151,7 @@ export function TransactionsPageClient({
     <>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div className="flex flex-col gap-1">
-          <h1 className="font-heading text-3xl font-semibold tracking-tight text-oreo-slate-purple">
-            Transactions
-          </h1>
+          <PageTitle>Transactions</PageTitle>
           <p className="text-sm text-muted-foreground">
             View and manage your ledger.
           </p>
@@ -264,13 +266,23 @@ export function TransactionsPageClient({
                     {dateString}
                   </h2>
                   <div className="flex flex-col gap-3">
-                    {groupedTransactions[date].map((txn) => (
-                      <TransactionCard
-                        key={txn.id}
-                        transaction={txn}
-                        onClick={setViewingTxn}
-                      />
-                    ))}
+                    {/* popLayout: rows below a deleted one slide up into place */}
+                    <AnimatePresence mode="popLayout" initial={false}>
+                      {groupedTransactions[date].map((txn) => (
+                        <motion.div
+                          key={txn.id}
+                          layout
+                          exit={{ opacity: 0, scale: 0.96 }}
+                          transition={spring.smooth}
+                        >
+                          <TransactionCard
+                            transaction={txn}
+                            onClick={setViewingTxn}
+                            onDelete={deleteWithUndo}
+                          />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                   </div>
                 </div>
               );
@@ -328,41 +340,16 @@ export function TransactionsPageClient({
         }}
       />
 
-      {/* Phones confirm with an iOS action sheet; larger screens keep the alert dialog */}
-      <ActionSheet
-        open={!isDesktop && !!deletingTxn}
+      <ConfirmDestructive
+        open={!!deletingTxn}
         onOpenChange={(open) => {
           if (!open) setDeletingTxn(null);
         }}
-        message="This transaction will be permanently deleted from your ledger."
-        actions={[{ label: "Delete Transaction", destructive: true, onSelect: handleDelete }]}
+        title="Delete this transaction?"
+        description="It will be removed from your ledger. You can undo for a few seconds."
+        confirmLabel="Delete Transaction"
+        onConfirm={handleDelete}
       />
-
-      <AlertDialog open={isDesktop && !!deletingTxn} onOpenChange={(open) => {
-        if (!open) setDeletingTxn(null);
-      }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete this transaction from your ledger.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={(e) => {
-                e.preventDefault();
-                handleDelete();
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

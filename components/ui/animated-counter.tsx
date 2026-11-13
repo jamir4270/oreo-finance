@@ -36,7 +36,7 @@ export function AnimatedCounter({
       onUpdate(latest) {
         if (ref.current) {
           // Format with commas and exact decimals
-          const formatted = latest.toLocaleString(undefined, {
+          const formatted = latest.toLocaleString("en", {
             minimumFractionDigits: decimals,
             maximumFractionDigits: decimals,
           });
@@ -50,7 +50,7 @@ export function AnimatedCounter({
 
   return (
     <span ref={ref} className={cn("tabular-nums", className)}>
-      {prefix}{(0).toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}
+      {prefix}{(0).toLocaleString("en", { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}
     </span>
   );
 }

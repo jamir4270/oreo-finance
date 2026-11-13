@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ArrowRight, Wallet } from "lucide-react";
 import { DynamicIcon } from "@/lib/icons";
 import { getExchangeRates } from "@/lib/exchange-rates";
-import { convertCurrency, getCurrencySymbol } from "@/lib/currency";
+import { convertCurrency, getCurrencySymbol, formatAmount, currencyDecimals } from "@/lib/currency";
 import { StaleRateBanner } from "@/components/ui/stale-rate-banner";
 
 export default async function DashboardPage() {
@@ -55,7 +55,7 @@ export default async function DashboardPage() {
           Total Balance
         </span>
         <h1 className="font-mono text-5xl md:text-7xl font-semibold tracking-tight text-oreo-slate-purple">
-          <AnimatedCounter value={totalBalance} prefix={currencySymbol} />
+          <AnimatedCounter value={totalBalance} prefix={currencySymbol} decimals={currencyDecimals(baseCurrency)} />
         </h1>
       </div>
 
@@ -104,7 +104,7 @@ export default async function DashboardPage() {
                         <span className="text-[10px] text-muted-foreground capitalize">{acc.type.replace("_", " ")}</span>
                       </div>
                     </div>
-                    <span className="font-mono text-sm font-semibold">{acc.currency} {acc.balance.toFixed(2)}</span>
+                    <span className="font-mono text-sm font-semibold">{acc.currency} {formatAmount(acc.balance, acc.currency)}</span>
                   </div>
                 );
               }) : (
@@ -141,11 +141,11 @@ export default async function DashboardPage() {
                     </div>
                     <div className="flex flex-col items-end">
                       <span className={`font-mono text-sm font-semibold ${isExpense ? "text-oreo-mauve" : isTransfer ? "text-foreground" : "text-oreo-dusty-teal"}`}>
-                        {prefix}{currencySymbol}{convertedAmount.toFixed(2)}
+                        {prefix}{currencySymbol}{formatAmount(convertedAmount, baseCurrency)}
                       </span>
                       {txnCurrency !== baseCurrency && (
                         <span className="text-[10px] text-muted-foreground font-mono">
-                          {prefix}{txnCurrency} {Number(txn.amount).toFixed(2)}
+                          {prefix}{txnCurrency} {formatAmount(Number(txn.amount), txnCurrency)}
                         </span>
                       )}
                     </div>

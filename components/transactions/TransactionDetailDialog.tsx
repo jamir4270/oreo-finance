@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { formatAmount } from "@/lib/currency";
 import { DynamicIcon } from "@/lib/icons";
 import { Pencil, Trash2, Calendar, Wallet, Tag as TagIcon, AlignLeft } from "lucide-react";
 import {
@@ -61,7 +62,7 @@ export function TransactionDetailDialog({
               {transaction.category?.name || "Uncategorized"}
             </h2>
             <div className={cn("font-mono text-3xl font-bold max-w-full truncate px-4 text-center", amountColor)}>
-              {prefix}{transaction.amount.toFixed(2)}
+              {prefix}{formatAmount(transaction.amount, transaction.account?.currency ?? "")}
               {transaction.account?.currency && (
                 <span className="ml-1.5 text-base font-medium text-muted-foreground font-sans">
                   {transaction.account.currency}
@@ -108,7 +109,7 @@ export function TransactionDetailDialog({
               <div className="flex flex-col min-w-0 flex-1">
                 <span className="text-sm font-medium text-foreground">Converted Amount</span>
                 <span className="text-sm text-muted-foreground truncate">
-                  {transaction.to_amount.toFixed(2)} {transaction.to_account?.currency} 
+                  {formatAmount(transaction.to_amount, transaction.to_account?.currency ?? "")} {transaction.to_account?.currency} 
                   <span className="opacity-70 ml-1 text-xs">(Rate: {transaction.exchange_rate.toFixed(4)})</span>
                 </span>
               </div>

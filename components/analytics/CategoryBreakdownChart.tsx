@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { AnalyticsTransaction } from "./AnalyticsPageClient";
 import { cn } from "@/lib/utils";
-import { getCurrencySymbol } from "@/lib/currency";
+import { getCurrencySymbol, formatAmount } from "@/lib/currency";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -73,7 +73,7 @@ export function CategoryBreakdownChart({
             <span className="font-medium truncate">{item.name}</span>
           </div>
           <span className="font-mono text-muted-foreground shrink-0">
-            {currencySymbol}{item.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            {currencySymbol}{formatAmount(item.value, baseCurrency, { maximumFractionDigits: 0 })}
           </span>
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-muted/60">

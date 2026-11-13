@@ -4,6 +4,7 @@ import { useState } from "react";
 import { DesktopSidebar } from "./DesktopSidebar";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { MobileTopBar } from "./MobileTopBar";
+import { NavTitleProvider } from "./nav-title";
 import { TransactionDialog, TxnAccountData, TxnCategoryData } from "../transactions/TransactionDialog";
 
 interface AppShellProps {
@@ -27,8 +28,10 @@ export function AppShell({ children, accounts, categories, dailyTxnCount }: AppS
 
       {/* Main Content Area */}
       <main className="flex min-w-0 flex-1 flex-col pb-tabbar lg:pb-0">
-        <MobileTopBar dailyTxnCount={dailyTxnCount} />
-        {children}
+        <NavTitleProvider>
+          <MobileTopBar dailyTxnCount={dailyTxnCount} />
+          {children}
+        </NavTitleProvider>
       </main>
 
       {/* Mobile Bottom Nav (below lg) */}

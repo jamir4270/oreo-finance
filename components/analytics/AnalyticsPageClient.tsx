@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { PageTitle } from "@/components/layout/nav-title";
 import {
   Select,
   SelectContent,
@@ -130,9 +131,7 @@ export function AnalyticsPageClient({
     <>
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border/60 pb-8">
         <div className="flex flex-col gap-2 min-w-0">
-          <h1 className="font-heading text-4xl md:text-5xl font-semibold tracking-tight text-oreo-slate-purple">
-            Analytics
-          </h1>
+          <PageTitle className="md:text-5xl">Analytics</PageTitle>
           <p className="text-base text-muted-foreground">
             Gain insights into your spending and trends.
           </p>

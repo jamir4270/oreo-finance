@@ -91,7 +91,7 @@ export function BudgetCard({ budget, baseCurrency, onClick }: BudgetCardProps) {
             )}
           >
             {rolloverIn > 0 ? "↑" : "↓"} {currencySymbol}
-            {Math.abs(rolloverIn).toFixed(0)} rollover
+            {formatAmount(Math.abs(rolloverIn), baseCurrency, { maximumFractionDigits: 0 })} rollover
           </span>
         )}
       </div>
@@ -119,8 +119,8 @@ export function BudgetCard({ budget, baseCurrency, onClick }: BudgetCardProps) {
             <TooltipContent side="top" className="p-3 max-w-[200px] flex flex-col gap-2">
               <div className="text-sm font-medium">
                 {isOverBudget 
-                  ? `${currencySymbol}${Math.abs(remaining).toFixed(2)} over budget` 
-                  : `${currencySymbol}${remaining.toFixed(2)} left to spend`}
+                  ? `${currencySymbol}${formatAmount(Math.abs(remaining), baseCurrency)} over budget` 
+                  : `${currencySymbol}${formatAmount(remaining, baseCurrency)} left to spend`}
               </div>
               <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
                 <input type="checkbox" className="rounded border-input text-oreo-periwinkle focus:ring-oreo-periwinkle" />
@@ -133,9 +133,9 @@ export function BudgetCard({ budget, baseCurrency, onClick }: BudgetCardProps) {
         {/* Numeric label */}
         <div className="flex items-center justify-between">
           <span className={cn("font-mono text-sm font-semibold", isOverBudget ? "text-oreo-mauve" : "text-foreground")}>
-            {currencySymbol}{spent.toFixed(2)}
+            {currencySymbol}{formatAmount(spent, baseCurrency)}
             <span className="font-sans font-normal text-muted-foreground"> spent of </span>
-            {currencySymbol}{effectiveLimit.toFixed(2)}
+            {currencySymbol}{formatAmount(effectiveLimit, baseCurrency)}
           </span>
           <span
             className={cn(
@@ -144,8 +144,8 @@ export function BudgetCard({ budget, baseCurrency, onClick }: BudgetCardProps) {
             )}
           >
             {isOverBudget
-              ? `${currencySymbol}${Math.abs(remaining).toFixed(2)} over`
-              : `${currencySymbol}${remaining.toFixed(2)} left`}
+              ? `${currencySymbol}${formatAmount(Math.abs(remaining), baseCurrency)} over`
+              : `${currencySymbol}${formatAmount(remaining, baseCurrency)} left`}
           </span>
         </div>
       </div>
@@ -170,4 +170,4 @@ function formatPeriodLabel(budget: BudgetCardData): string {
   return `${startStr} – ${endStr}`;
 }
 
-import { getCurrencySymbol } from "@/lib/currency";
+import { getCurrencySymbol, formatAmount } from "@/lib/currency";

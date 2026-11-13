@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { convertCurrency, CURRENCIES } from "@/lib/currency";
+import { convertCurrency, CURRENCIES, formatAmount } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { QuickLogFields } from "./QuickLogFields";
@@ -214,7 +214,7 @@ export function TransactionDialog({
       if (!isNaN(amount) && amount > 0) {
         const to_amount = convertCurrency(amount, sourceAccount.currency, destAccount.currency, exchangeRates);
         const rate = exchangeRates[destAccount.currency] / exchangeRates[sourceAccount.currency];
-        convertedAmountStr = `≈ ${to_amount.toFixed(2)} ${destAccount.currency}`;
+        convertedAmountStr = `≈ ${formatAmount(to_amount, destAccount.currency)} ${destAccount.currency}`;
         exchangeRateStr = `1 ${sourceAccount.currency} = ${rate.toFixed(4)} ${destAccount.currency}`;
       }
     }
@@ -223,7 +223,7 @@ export function TransactionDialog({
     if (!isNaN(amount) && amount > 0) {
       const to_amount = convertCurrency(amount, inputCurrency, sourceAccount.currency, exchangeRates);
       const rate = exchangeRates[sourceAccount.currency] / exchangeRates[inputCurrency];
-      convertedAmountStr = `≈ ${to_amount.toFixed(2)} ${sourceAccount.currency}`;
+      convertedAmountStr = `≈ ${formatAmount(to_amount, sourceAccount.currency)} ${sourceAccount.currency}`;
       exchangeRateStr = `1 ${inputCurrency} = ${rate.toFixed(4)} ${sourceAccount.currency}`;
     }
   }

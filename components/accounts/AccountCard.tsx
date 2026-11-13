@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { formatAmount } from "@/lib/currency";
 import { MoreVertical, Archive, ArchiveRestore, Pencil, Wallet } from "lucide-react";
 import { DynamicIcon } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
@@ -96,7 +97,7 @@ export function AccountCard({ account, onEdit }: AccountCardProps) {
               {account.currency}
             </span>
             <span className="text-lg sm:text-2xl font-semibold tracking-tight text-foreground">
-              {account.balance.toFixed(2)}
+              {formatAmount(account.balance, account.currency)}
             </span>
           </div>
         </div>

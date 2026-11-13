@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { PageTitle } from "@/components/layout/nav-title";
 import { createClient, getAuthUser } from "@/lib/supabase/server";
 import SettingsClient from "@/components/settings/SettingsClient";
 
@@ -23,9 +24,7 @@ export default async function SettingsPage() {
   return (
     <div className="flex flex-1 flex-col p-6 md:p-10 max-w-5xl mx-auto w-full">
       <div className="flex flex-col gap-2 border-b border-border pb-6 mb-8">
-        <h1 className="font-heading text-3xl font-semibold tracking-tight text-oreo-slate-purple">
-          Settings
-        </h1>
+        <PageTitle>Settings</PageTitle>
         <p className="text-sm text-muted-foreground">
           Manage your account, preferences, and base currency.
         </p>

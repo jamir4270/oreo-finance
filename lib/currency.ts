@@ -36,6 +36,22 @@ export function currencyDecimals(currency: string): number {
 }
 
 /**
+ * Formats an amount for display: thousands separators and the currency's own decimals
+ * (1,234.50 PHP, 1,235 JPY). No symbol, so callers keep their symbol/code layout.
+ * Pass maximumFractionDigits: 0 for summary figures.
+ * shortcut: fixed "en" grouping so server and client render identically (no hydration
+ * mismatch); switch to the user's locale once it's stored on the profile.
+ */
+export function formatAmount(
+  amount: number,
+  currency: string,
+  { maximumFractionDigits }: { maximumFractionDigits?: number } = {}
+): string {
+  const digits = Math.min(currencyDecimals(currency), maximumFractionDigits ?? Infinity);
+  return new Intl.NumberFormat("en", { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(amount);
+}
+
+/**
  * Rounds to the currency's minor unit (2 decimals for PHP/USD, 0 for JPY/KRW/VND),
  * so converted amounts aren't stored as 12.3456789.
  */

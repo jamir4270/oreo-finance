@@ -22,7 +22,7 @@ interface BudgetDetailDialogProps {
   onDelete: (budget: BudgetCardData) => void;
 }
 
-import { getCurrencySymbol } from "@/lib/currency";
+import { getCurrencySymbol, formatAmount } from "@/lib/currency";
 
 export function BudgetDetailDialog({
   budget,
@@ -92,7 +92,7 @@ export function BudgetDetailDialog({
             <div className="flex flex-col min-w-0 flex-1">
               <span className="text-sm font-medium text-foreground">Base Limit</span>
               <span className="text-sm font-mono text-muted-foreground">
-                {currencySymbol}{budget.convertedLimitAmount.toFixed(2)}
+                {currencySymbol}{formatAmount(budget.convertedLimitAmount, baseCurrency)}
               </span>
             </div>
           </div>
@@ -113,7 +113,7 @@ export function BudgetDetailDialog({
                   "text-sm font-mono",
                   rolloverIn > 0 ? "text-oreo-dusty-teal" : "text-oreo-mauve"
                 )}>
-                  {rolloverIn > 0 ? "+" : ""}{currencySymbol}{rolloverIn.toFixed(2)}
+                  {rolloverIn > 0 ? "+" : ""}{currencySymbol}{formatAmount(rolloverIn, baseCurrency)}
                 </span>
               </div>
             </div>
@@ -125,7 +125,7 @@ export function BudgetDetailDialog({
             <div className="flex flex-col min-w-0 flex-1">
               <span className="text-sm font-medium text-foreground">Effective Limit</span>
               <span className="text-sm font-mono text-foreground font-semibold">
-                {currencySymbol}{effectiveLimit.toFixed(2)}
+                {currencySymbol}{formatAmount(effectiveLimit, baseCurrency)}
               </span>
             </div>
           </div>
@@ -136,7 +136,7 @@ export function BudgetDetailDialog({
             <div className="flex flex-col min-w-0 flex-1">
               <span className="text-sm font-medium text-foreground">Spent</span>
               <span className={cn("text-sm font-mono font-semibold", isOverBudget ? "text-oreo-mauve" : "text-foreground")}>
-                {currencySymbol}{spent.toFixed(2)}
+                {currencySymbol}{formatAmount(spent, baseCurrency)}
               </span>
             </div>
           </div>
@@ -152,7 +152,7 @@ export function BudgetDetailDialog({
                 "text-sm font-mono font-semibold",
                 isOverBudget ? "text-oreo-mauve" : "text-oreo-dusty-teal"
               )}>
-                {isOverBudget ? "-" : ""}{currencySymbol}{Math.abs(remaining).toFixed(2)}
+                {isOverBudget ? "-" : ""}{currencySymbol}{formatAmount(Math.abs(remaining), baseCurrency)}
               </span>
             </div>
           </div>
