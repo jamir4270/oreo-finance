@@ -13,6 +13,8 @@ import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { convertCurrency, CURRENCIES } from "@/lib/currency";
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { QuickLogFields } from "./QuickLogFields";
 
 export type TxnAccountData = { id: string; name: string; currency: string };
 export type TxnCategoryData = { id: string; name: string; icon: string; txn_type: string };
@@ -43,6 +45,30 @@ interface TransactionDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   trigger?: React.ReactElement;
+}
+
+// Remembers the last account and per-type category on this device so a typical log is
+// amount → Save. Storage can be unavailable (private mode), so failures are ignored.
+const LAST_USED_KEY = "oreo:last-used";
+type LastUsed = { account?: string; category?: Record<string, string> };
+function readLastUsed(): LastUsed {
+  try {
+    return JSON.parse(localStorage.getItem(LAST_USED_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+function writeLastUsed(formData: FormData) {
+  try {
+    const prev = readLastUsed();
+    const type = formData.get("type") as string;
+    localStorage.setItem(
+      LAST_USED_KEY,
+      JSON.stringify({ account: formData.get("account_id"), category: { ...prev.category, [type]: formData.get("category_id") } })
+    );
+  } catch {
+    // per-device convenience only
+  }
 }
 
 function SubmitButton({ isEdit }: { isEdit: boolean }) {
@@ -76,6 +102,16 @@ export function TransactionDialog({
   const [accountId, setAccountId] = React.useState<string>(transaction?.account_id || (accounts[0]?.id || ""));
   const [toAccountId, setToAccountId] = React.useState<string>(transaction?.to_account_id || "");
   const [inputCurrency, setInputCurrency] = React.useState<string>(transaction?.original_currency || accounts.find(a => a.id === (transaction?.account_id || accounts[0]?.id))?.currency || "USD");
+  const [categoryId, setCategoryId] = React.useState<string>(transaction?.category_id || "");
+
+  // Phones get the keypad-first quick log for new entries; edits and desktop keep the full form.
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const quick = !isDesktop && !isEdit;
+
+  const changeType = (next: string) => {
+    setType(next);
+    setCategoryId(readLastUsed().category?.[next] || "");
+  };
 
   const actionWithId = transaction ? updateTransaction.bind(null, transaction.id) : createTransaction;
   const [state, formAction] = useActionState(actionWithId, null);
@@ -91,6 +127,7 @@ export function TransactionDialog({
   const submit = (formData: FormData) => {
     inFlightRef.current = formData;
     if (!isEdit) {
+      writeLastUsed(formData);
       setDraft(null);
       setOpen(false);
       toastIdRef.current = toast.loading("Saving transaction...");
@@ -129,6 +166,7 @@ export function TransactionDialog({
       setAccountId(submitted.get("account_id") as string);
       setToAccountId((submitted.get("to_account_id") as string | null) || "");
       setInputCurrency(submitted.get("input_currency") as string);
+      setCategoryId(submitted.get("category_id") as string);
       setOpen(true);
     }
   }, [state, setOpen, isEdit]);
@@ -139,15 +177,19 @@ export function TransactionDialog({
       setType(transaction.type);
       setAccountId(transaction.account_id);
       setToAccountId(transaction.to_account_id || "");
+      setCategoryId(transaction.category_id);
       
       const acc = accounts.find(a => a.id === transaction.account_id);
       setInputCurrency(transaction.original_currency || acc?.currency || accounts[0]?.currency || "USD");
       setAmountStr(transaction.original_amount?.toString() || transaction.amount.toString());
     } else if (open && !transaction) {
+      const last = readLastUsed();
+      const account = accounts.find((a) => a.id === last.account) ?? accounts[0];
       setType("expense");
-      setAccountId(accounts[0]?.id || "");
+      setAccountId(account?.id || "");
       setToAccountId("");
-      setInputCurrency(accounts[0]?.currency || "USD");
+      setInputCurrency(account?.currency || "USD");
+      setCategoryId(last.category?.expense || "");
       setAmountStr("");
     }
   }, [open, transaction, accounts, draft]);
@@ -155,6 +197,10 @@ export function TransactionDialog({
   const draftValue = (name: string) => (draft?.get(name) as string | null) ?? undefined;
 
   const filteredCategories = categories.filter((c) => c.txn_type === type);
+  // Fall back to the first category of this type if the remembered one is gone or doesn't match.
+  const effectiveCategoryId = filteredCategories.some((c) => c.id === categoryId)
+    ? categoryId
+    : filteredCategories[0]?.id || "";
 
   // Transfer multi-currency math
   const sourceAccount = accounts.find((a) => a.id === accountId);
@@ -187,10 +233,36 @@ export function TransactionDialog({
       open={open} 
       onOpenChange={handleOpenChange}
       trigger={trigger}
-      title={isEdit ? "Edit Transaction" : "Log Transaction"}
-      description={isEdit ? "Update the details of your transaction." : "Add a new expense, income or transfer."}
+      title={isEdit ? "Edit Transaction" : quick ? "New Transaction" : "Log Transaction"}
+      description={quick ? undefined : isEdit ? "Update the details of your transaction." : "Add a new expense, income or transfer."}
     >
       <form key={transaction?.id || "new"} action={submit} className="flex flex-col gap-4 mt-2">
+        {quick ? (
+          <QuickLogFields
+            type={type}
+            onTypeChange={changeType}
+            amountStr={amountStr}
+            onAmountChange={setAmountStr}
+            inputCurrency={inputCurrency}
+            onCurrencyChange={setInputCurrency}
+            accounts={accounts}
+            accountId={accountId}
+            onAccountChange={(id) => {
+              setAccountId(id);
+              setInputCurrency(accounts.find((a) => a.id === id)?.currency ?? inputCurrency);
+            }}
+            toAccountId={toAccountId}
+            onToAccountChange={setToAccountId}
+            categories={filteredCategories}
+            categoryId={effectiveCategoryId}
+            onCategoryChange={setCategoryId}
+            defaultDate={draftValue("txn_date") ?? new Date().toISOString().split("T")[0]}
+            defaultNote={draftValue("note")}
+            convertedAmountStr={convertedAmountStr}
+            error={state?.error}
+          />
+        ) : (
+        <>
           {/* Type Selector Tiles */}
           <div className="w-full">
             {isEdit ? (
@@ -201,21 +273,21 @@ export function TransactionDialog({
               <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
-                  onClick={() => setType('expense')}
+                  onClick={() => changeType('expense')}
                   className={cn("flex flex-col items-center justify-center py-3 rounded-xl border transition-all text-sm font-medium", type === 'expense' ? "border-[#fbe3e6] bg-[#fbe3e6]/40 text-[#a76571] shadow-sm" : "border-border bg-card text-muted-foreground hover:bg-muted/50")}
                 >
                   Expense
                 </button>
                 <button
                   type="button"
-                  onClick={() => setType('income')}
+                  onClick={() => changeType('income')}
                   className={cn("flex flex-col items-center justify-center py-3 rounded-xl border transition-all text-sm font-medium", type === 'income' ? "border-[#dff2ef] bg-[#dff2ef]/50 text-[#5f8f8a] shadow-sm" : "border-border bg-card text-muted-foreground hover:bg-muted/50")}
                 >
                   Income
                 </button>
                 <button
                   type="button"
-                  onClick={() => setType('transfer')}
+                  onClick={() => changeType('transfer')}
                   className={cn("flex flex-col items-center justify-center py-3 rounded-xl border transition-all text-sm font-medium", type === 'transfer' ? "border-oreo-lavender bg-oreo-lavender/30 text-oreo-slate-purple shadow-sm" : "border-border bg-card text-muted-foreground hover:bg-muted/50")}
                 >
                   Transfer
@@ -278,7 +350,8 @@ export function TransactionDialog({
                 <select
                   id="category_id"
                   name="category_id"
-                  defaultValue={draftValue("category_id") ?? (transaction?.category_id || (filteredCategories[0]?.id || ""))}
+                  value={effectiveCategoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
                   className="flex h-10 pointer-coarse:h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base pointer-fine:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   required
                 >
@@ -319,7 +392,8 @@ export function TransactionDialog({
               <select
                 id="category_id"
                 name="category_id"
-                defaultValue={draftValue("category_id") ?? (transaction?.category_id || (filteredCategories[0]?.id || ""))}
+                value={effectiveCategoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
                 className="flex h-10 pointer-coarse:h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base pointer-fine:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 required
               >
@@ -373,6 +447,8 @@ export function TransactionDialog({
           {state?.error && <p className="text-sm font-medium text-destructive">{state.error}</p>}
 
           <SubmitButton isEdit={isEdit} />
+        </>
+        )}
         </form>
     </ResponsiveSheet>
   );

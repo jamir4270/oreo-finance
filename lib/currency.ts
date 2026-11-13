@@ -26,18 +26,21 @@ export function convertCurrency(
   return (amount / fromRate) * toRate;
 }
 
+/** Minor-unit digits for a currency: 2 for PHP/USD, 0 for JPY/KRW/VND. Unknown codes get 2. */
+export function currencyDecimals(currency: string): number {
+  try {
+    return new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions().maximumFractionDigits ?? 2;
+  } catch {
+    return 2;
+  }
+}
+
 /**
  * Rounds to the currency's minor unit (2 decimals for PHP/USD, 0 for JPY/KRW/VND),
  * so converted amounts aren't stored as 12.3456789.
  */
 export function roundToCurrency(amount: number, currency: string): number {
-  let digits = 2;
-  try {
-    digits = new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions().maximumFractionDigits ?? 2;
-  } catch {
-    // Unknown code: keep 2 decimals
-  }
-  const factor = 10 ** digits;
+  const factor = 10 ** currencyDecimals(currency);
   return Math.round((amount + Number.EPSILON) * factor) / factor;
 }
 
