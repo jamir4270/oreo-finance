@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { cache } from "react";
 
 /**
  * Creates a Supabase client for use in Server Components, Server Actions,
@@ -33,3 +34,16 @@ export async function createClient() {
     }
   );
 }
+
+/**
+ * The signed-in user for this request, or null. Deduplicated per request with
+ * React cache(), so the layout and page share one check. getClaims() verifies
+ * the JWT locally when the project uses asymmetric signing keys (otherwise it
+ * falls back to asking the Auth server), unlike getUser() which always does.
+ */
+export const getAuthUser = cache(async () => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getClaims();
+  if (error || !data) return null;
+  return { id: data.claims.sub, email: data.claims.email };
+});

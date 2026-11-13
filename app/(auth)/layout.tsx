@@ -13,7 +13,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col lg:flex-row bg-background">
+    <div className="flex min-h-dvh flex-col lg:flex-row bg-background">
       {/* Mobile Top Panel */}
       <div className="flex flex-col items-center justify-center pt-2 pb-2 lg:hidden">
         <AuthSidebar />

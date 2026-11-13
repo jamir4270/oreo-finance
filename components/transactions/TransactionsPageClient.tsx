@@ -1,22 +1,18 @@
 "use client";
 
 import * as React from "react";
+import { localDay } from "@/lib/dates";
+import { formatAmount } from "@/lib/currency";
+import { PageTitle } from "@/components/layout/nav-title";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { TransactionData, TxnAccountData, TxnCategoryData, TransactionDialog } from "./TransactionDialog";
 import { TransactionDetailDialog } from "./TransactionDetailDialog";
 import { TransactionCard } from "./TransactionCard";
 import { deleteTransaction } from "@/app/actions/transactions";
 import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { AnimatePresence, motion } from "motion/react";
+import { spring } from "@/lib/motion";
+import { ConfirmDestructive } from "@/components/ui/confirm-destructive";
 import { Button } from "@/components/ui/button";
 import { Plus, ChevronLeft, ChevronRight, Calendar, Filter, Wallet, Tags } from "lucide-react";
 import {
@@ -43,7 +39,7 @@ interface TransactionsPageClientProps {
 }
 
 export function TransactionsPageClient({ 
-  transactions, 
+  transactions: serverTransactions, 
   accounts, 
   categories, 
   exchangeRates,
@@ -59,8 +55,11 @@ export function TransactionsPageClient({
   const [editingTxn, setEditingTxn] = React.useState<TransactionData | null>(null);
   const [viewingTxn, setViewingTxn] = React.useState<TransactionData | null>(null);
   const [deletingTxn, setDeletingTxn] = React.useState<TransactionData | null>(null);
-  const [deleteError, setDeleteError] = React.useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = React.useState(false);
+  // Deleted rows vanish immediately; React restores them if the server call fails.
+  const [transactions, removeOptimistic] = React.useOptimistic(
+    serverTransactions,
+    (list, id: string) => list.filter((t) => t.id !== id)
+  );
   const [isCreateOpen, setIsCreateOpen] = React.useState(false);
   const [isPending, startTransition] = React.useTransition();
 
@@ -105,26 +104,35 @@ export function TransactionsPageClient({
   // Sort dates descending (newest first)
   const sortedDates = Object.keys(groupedTransactions).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
-  const handleDelete = async () => {
-    if (!deletingTxn) return;
-    
-    setIsDeleting(true);
-    setDeleteError(null);
-    
-    const result = await deleteTransaction(deletingTxn.id);
-    
-    setIsDeleting(false);
-    
-    if (result?.error) {
-      setDeleteError(result.error);
-      toast.error(result.error);
-    } else {
-      const deletedAmount = deletingTxn.amount;
-      setDeletingTxn(null);
-      toast.success("Transaction deleted", {
-        description: `Removed transaction of ${deletedAmount}`
+  // Undoable delete (iOS Mail style): the row disappears now, the server delete only runs
+  // after the 5s undo window. Undo just ends the transition, which restores the row.
+  // If the tab closes inside the window nothing is deleted, which fails safe.
+  const deleteWithUndo = (txn: TransactionData) => {
+    // Separate from startTransition above so the list doesn't dim while deleting.
+    React.startTransition(async () => {
+      removeOptimistic(txn.id);
+      const undone = await new Promise<boolean>((resolve) => {
+        toast("Transaction deleted", {
+          description: `${txn.category?.name ?? "Transaction"} · ${formatAmount(txn.amount, txn.account?.currency ?? "")} ${txn.account?.currency ?? ""}`,
+          duration: 5000,
+          action: { label: "Undo", onClick: () => resolve(true) },
+          onAutoClose: () => resolve(false),
+          onDismiss: () => resolve(false),
+        });
       });
-    }
+      if (undone) return;
+      const result = await deleteTransaction(txn.id);
+      if (result?.error) {
+        toast.error("Couldn't delete transaction", { description: result.error });
+      }
+    });
+  };
+
+  const handleDelete = () => {
+    const txn = deletingTxn;
+    if (!txn) return;
+    setDeletingTxn(null);
+    deleteWithUndo(txn);
   };
 
   const emptyStateJsx = (
@@ -144,9 +152,7 @@ export function TransactionsPageClient({
     <>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div className="flex flex-col gap-1">
-          <h1 className="font-heading text-3xl font-semibold tracking-tight text-oreo-slate-purple">
-            Transactions
-          </h1>
+          <PageTitle>Transactions</PageTitle>
           <p className="text-sm text-muted-foreground">
             View and manage your ledger.
           </p>
@@ -252,8 +258,8 @@ export function TransactionsPageClient({
                 year: dateObj.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
               });
 
-              if (date === today.toISOString().split("T")[0]) dateString = "Today";
-              else if (date === yesterday.toISOString().split("T")[0]) dateString = "Yesterday";
+              if (date === localDay(today)) dateString = "Today";
+              else if (date === localDay(yesterday)) dateString = "Yesterday";
 
               return (
                 <div key={date} className="flex flex-col gap-3">
@@ -261,13 +267,23 @@ export function TransactionsPageClient({
                     {dateString}
                   </h2>
                   <div className="flex flex-col gap-3">
-                    {groupedTransactions[date].map((txn) => (
-                      <TransactionCard
-                        key={txn.id}
-                        transaction={txn}
-                        onClick={setViewingTxn}
-                      />
-                    ))}
+                    {/* popLayout: rows below a deleted one slide up into place */}
+                    <AnimatePresence mode="popLayout" initial={false}>
+                      {groupedTransactions[date].map((txn) => (
+                        <motion.div
+                          key={txn.id}
+                          layout
+                          exit={{ opacity: 0, scale: 0.96 }}
+                          transition={spring.smooth}
+                        >
+                          <TransactionCard
+                            transaction={txn}
+                            onClick={setViewingTxn}
+                            onDelete={deleteWithUndo}
+                          />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                   </div>
                 </div>
               );
@@ -325,41 +341,16 @@ export function TransactionsPageClient({
         }}
       />
 
-      <AlertDialog open={!!deletingTxn} onOpenChange={(open) => {
-        if (!open && !isDeleting) {
-          setDeletingTxn(null);
-          setDeleteError(null);
-        }
-      }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete this transaction from your ledger.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          
-          {deleteError && (
-            <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-              {deleteError}
-            </div>
-          )}
-
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={(e) => {
-                e.preventDefault();
-                handleDelete();
-              }}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDestructive
+        open={!!deletingTxn}
+        onOpenChange={(open) => {
+          if (!open) setDeletingTxn(null);
+        }}
+        title="Delete this transaction?"
+        description="It will be removed from your ledger. You can undo for a few seconds."
+        confirmLabel="Delete Transaction"
+        onConfirm={handleDelete}
+      />
     </>
   );
 }

@@ -1,25 +1,16 @@
 "use client";
 
 import * as React from "react";
+import { PageTitle } from "@/components/layout/nav-title";
 import { BudgetCard, BudgetCardData } from "./BudgetCard";
 import { BudgetDetailDialog } from "./BudgetDetailDialog";
 import { CreateBudgetDialog, BudgetCategoryData } from "./CreateBudgetDialog";
 import { EditBudgetDialog } from "./EditBudgetDialog";
 import { deleteBudget } from "@/app/actions/budgets";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDestructive } from "@/components/ui/confirm-destructive";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
-import { toast } from "sonner";
 
 interface BudgetsPageClientProps {
   budgets: BudgetCardData[];
@@ -31,31 +22,11 @@ export function BudgetsPageClient({ budgets, categories, baseCurrency }: Budgets
   const [viewingBudget, setViewingBudget] = React.useState<BudgetCardData | null>(null);
   const [editingBudget, setEditingBudget] = React.useState<BudgetCardData | null>(null);
   const [deletingBudget, setDeletingBudget] = React.useState<BudgetCardData | null>(null);
-  const [deleteError, setDeleteError] = React.useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = React.useState(false);
   const [isCreateOpen, setIsCreateOpen] = React.useState(false);
   const [periodFilter, setPeriodFilter] = React.useState<string>("all");
 
   const existingCategoryIds = budgets.map((b) => b.category_id);
 
-  const handleDelete = async () => {
-    if (!deletingBudget) return;
-
-    setIsDeleting(true);
-    setDeleteError(null);
-
-    const result = await deleteBudget(deletingBudget.id);
-
-    setIsDeleting(false);
-
-    if (result?.error) {
-      setDeleteError(result.error);
-      toast.error(result.error);
-    } else {
-      setDeletingBudget(null);
-      toast.success("Budget deleted");
-    }
-  };
 
   // Filter and sort budgets
   const filteredBudgets = budgets.filter((b) => {
@@ -73,9 +44,7 @@ export function BudgetsPageClient({ budgets, categories, baseCurrency }: Budgets
     <>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div className="flex flex-col gap-1">
-          <h1 className="font-heading text-3xl font-semibold tracking-tight text-oreo-slate-purple">
-            Budgets
-          </h1>
+          <PageTitle>Budgets</PageTitle>
           <p className="text-sm text-muted-foreground">
             Plan your spending and track budget progress.
           </p>
@@ -158,41 +127,17 @@ export function BudgetsPageClient({ budgets, categories, baseCurrency }: Budgets
       )}
 
       {/* Delete Confirmation */}
-      <AlertDialog open={!!deletingBudget} onOpenChange={(open) => {
-        if (!open && !isDeleting) {
-          setDeletingBudget(null);
-          setDeleteError(null);
-        }
-      }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete this budget and all its period history. Your transactions will not be affected.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          {deleteError && (
-            <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-              {deleteError}
-            </div>
-          )}
-
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                handleDelete();
-              }}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDestructive
+        open={!!deletingBudget}
+        onOpenChange={(open) => {
+          if (!open) setDeletingBudget(null);
+        }}
+        title="Delete this budget?"
+        description="This permanently deletes the budget and its period history. Your transactions are not affected."
+        confirmLabel="Delete Budget"
+        successMessage="Budget deleted"
+        onConfirm={() => (deletingBudget ? deleteBudget(deletingBudget.id) : undefined)}
+      />
     </>
   );
 }

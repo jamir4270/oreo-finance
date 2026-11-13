@@ -2,18 +2,14 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { ChevronRight, LogOut, Shield, Globe } from "lucide-react";
+import { ChevronRight, LogOut, Shield, Globe, Download } from "lucide-react";
 import { toast } from "sonner";
 import { updateBaseCurrency } from "@/app/actions/settings";
 import { logout } from "@/app/actions/auth";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { ConfirmDestructive } from "@/components/ui/confirm-destructive";
+import { RecurringList, type RecurringRule } from "@/components/settings/RecurringList";
 import {
   Dialog,
   DialogContent,
@@ -28,14 +24,17 @@ import { CURRENCIES } from "@/lib/currency";
 interface SettingsClientProps {
   email: string;
   baseCurrency: string;
+  recurring: RecurringRule[];
 }
 
 export default function SettingsClient({
   email,
   baseCurrency,
+  recurring,
 }: SettingsClientProps) {
   const [currency, setCurrency] = useState(baseCurrency);
   const [isPending, startTransition] = useTransition();
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
 
   const handleCurrencyChange = (newCurrency: string | null) => {
     if (!newCurrency) return;
@@ -144,38 +143,60 @@ export default function SettingsClient({
         </Card>
       </section>
 
+      <RecurringList rules={recurring} />
+
+      {/* Data Section */}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-sm font-medium text-muted-foreground px-1 uppercase tracking-wider">
+          Data
+        </h2>
+        <Card className="flex flex-col overflow-hidden">
+          {/* Plain <a>: a route handler download, not a page navigation */}
+          <a
+            href="/api/export/transactions"
+            download
+            className="flex items-center justify-between p-4 sm:px-6 transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none active:bg-muted/60"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-oreo-dusty-teal/15 text-oreo-dusty-teal">
+                <Download className="h-4 w-4" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-foreground">Export transactions</span>
+                <span className="text-xs text-muted-foreground">Download everything as a CSV for Excel, Numbers or Sheets</span>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </a>
+        </Card>
+      </section>
+
       {/* Sign Out Section */}
       <section className="flex flex-col gap-3">
         <Card className="flex flex-col overflow-hidden">
-          <Popover>
-            <PopoverTrigger className="flex w-full items-center justify-between p-4 sm:px-6 transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none group">
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-destructive/10 text-destructive group-hover:bg-destructive/20 transition-colors">
-                  <LogOut className="h-4 w-4" />
-                </div>
-                <span className="text-sm font-medium text-destructive">
-                  Sign Out
-                </span>
+          <button
+            type="button"
+            onClick={() => setConfirmSignOut(true)}
+            className="flex w-full items-center justify-between p-4 sm:px-6 transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none active:bg-muted/60 group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-destructive/10 text-destructive group-hover:bg-destructive/20 transition-colors">
+                <LogOut className="h-4 w-4" />
               </div>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-[200px] p-4">
-              <div className="flex flex-col gap-3 text-center">
-                <span className="text-sm font-medium">Are you sure?</span>
-                <div className="flex items-center gap-2">
-                  <form action={logout} className="w-full">
-                    <Button
-                      type="submit"
-                      variant="destructive"
-                      size="sm"
-                      className="w-full"
-                    >
-                      Sign Out
-                    </Button>
-                  </form>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+              <span className="text-sm font-medium text-destructive">
+                Sign Out
+              </span>
+            </div>
+          </button>
+          <ConfirmDestructive
+            open={confirmSignOut}
+            onOpenChange={setConfirmSignOut}
+            title="Sign out?"
+            description="You'll need to sign in again to see your finances."
+            confirmLabel="Sign Out"
+            pendingLabel="Signing out..."
+            onConfirm={() => logout()}
+          />
         </Card>
       </section>
 

@@ -6,10 +6,10 @@ import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
   "group/button relative inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap outline-none select-none disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 " +
-  "transition-all duration-[--duration-sm] ease-[--ease-oreo] " +
+  "transition-all duration-(--duration-sm) ease-(--ease-oreo) " +
   "hover:-translate-y-[2px] hover:shadow-oreo-md " +
   "focus-visible:ring-2 focus-visible:ring-oreo-periwinkle focus-visible:ring-offset-2 " +
-  "active:scale-[0.98] active:shadow-oreo-sm active:duration-[--duration-xs] active:translate-y-0",
+  "active:scale-[0.97] active:opacity-85 active:shadow-oreo-sm active:duration-(--duration-xs) active:translate-y-0",
   {
     variants: {
       variant: {
@@ -26,16 +26,16 @@ const buttonVariants = cva(
       },
       size: {
         default:
-          "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+          "h-8 pointer-coarse:h-11 pointer-coarse:px-4 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
         xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
         sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
-        lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        icon: "size-8",
+        lg: "h-9 pointer-coarse:h-12 pointer-coarse:px-5 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        icon: "size-8 pointer-coarse:size-11",
         "icon-xs":
           "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
         "icon-sm":
           "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
-        "icon-lg": "size-9",
+        "icon-lg": "size-9 pointer-coarse:size-11",
       },
     },
     defaultVariants: {

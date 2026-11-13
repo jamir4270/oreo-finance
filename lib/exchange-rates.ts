@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 export interface ExchangeRatesData {
@@ -10,8 +11,9 @@ export interface ExchangeRatesData {
  * Fetches the latest exchange rates.
  * Checks the local Supabase cache first. If older than 24 hours (or missing),
  * fetches fresh rates from Open Exchange Rates and caches them.
+ * Wrapped in React cache() so repeated calls in one request share one lookup.
  */
-export async function getExchangeRates(): Promise<{ rates: Record<string, number>; isStale: boolean }> {
+export const getExchangeRates = cache(async (): Promise<{ rates: Record<string, number>; isStale: boolean }> => {
   const supabase = await createClient();
 
   // 1. Check local cache
@@ -77,4 +79,4 @@ export async function getExchangeRates(): Promise<{ rates: Record<string, number
     // If no cache and fetch failed, we return an empty dict, or a basic fallback
     return { rates: { USD: 1 }, isStale: true };
   }
-}
+});

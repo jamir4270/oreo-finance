@@ -179,7 +179,7 @@ export function TrendsChart({
                           formatter={(value, name) => (
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{name}:</span>
-                              <span className="font-mono font-medium">{currencySymbol}{Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                              <span className="font-mono font-medium">{currencySymbol}{formatAmount(Number(value), baseCurrency)}</span>
                             </div>
                           )}
                         />
@@ -288,7 +288,7 @@ export function TrendsChart({
   );
 }
 
-import { getCurrencySymbol } from "@/lib/currency";
+import { getCurrencySymbol, formatAmount } from "@/lib/currency";
 
 function formatCompactCurrency(value: number) {
   if (value >= 1000) {

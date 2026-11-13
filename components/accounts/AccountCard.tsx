@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { MoreVertical, Archive, ArchiveRestore, Pencil } from "lucide-react";
-import * as LucideIcons from "lucide-react";
+import { formatAmount } from "@/lib/currency";
+import { MoreVertical, Archive, ArchiveRestore, Pencil, Wallet } from "lucide-react";
+import { DynamicIcon } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -32,14 +33,13 @@ export function AccountCard({ account, onEdit }: AccountCardProps) {
     });
   };
 
-  const Icon = account.icon ? (LucideIcons as any)[account.icon] : LucideIcons.Wallet;
 
   return (
     <div className="flex items-center sm:flex-col sm:items-stretch justify-between rounded-xl border border-border bg-card p-4 sm:p-6 shadow-oreo-sm transition-all hover:shadow-oreo-md gap-4 sm:gap-0">
       <div className="flex items-center sm:items-start justify-between flex-1 sm:flex-none min-w-0">
         <div className="flex items-center gap-3 min-w-0">
           <div className="flex h-10 w-10 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-oreo-lavender/50 text-oreo-slate-purple">
-            {Icon && <Icon className="h-5 w-5" />}
+            <DynamicIcon icon={account.icon} fallback={Wallet} className="h-5 w-5" />
           </div>
           <div className="min-w-0">
             <h3 className="font-heading text-base sm:text-lg font-medium text-foreground truncate">
@@ -97,7 +97,7 @@ export function AccountCard({ account, onEdit }: AccountCardProps) {
               {account.currency}
             </span>
             <span className="text-lg sm:text-2xl font-semibold tracking-tight text-foreground">
-              {account.balance.toFixed(2)}
+              {formatAmount(account.balance, account.currency)}
             </span>
           </div>
         </div>

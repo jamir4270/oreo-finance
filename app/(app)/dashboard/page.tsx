@@ -1,57 +1,49 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getAuthUser } from "@/lib/supabase/server";
+import { syncRecurring } from "@/lib/recurring";
+import { PageTransition } from "@/components/layout/page-transition";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { Mascot } from "@/components/ui/mascot";
-import * as LucideIcons from "lucide-react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Wallet } from "lucide-react";
+import { DynamicIcon } from "@/lib/icons";
 import { getExchangeRates } from "@/lib/exchange-rates";
-import { convertCurrency, getCurrencySymbol } from "@/lib/currency";
+import { convertCurrency, getCurrencySymbol, formatAmount, currencyDecimals, amountIn } from "@/lib/currency";
 import { StaleRateBanner } from "@/components/ui/stale-rate-banner";
+import { SafeToSpendCard } from "@/components/dashboard/SafeToSpendCard";
+import { loadCurrentBudgets, safeToSpend } from "@/lib/budget-periods";
+import { getToday } from "@/lib/today";
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getAuthUser();
   if (!user) return null;
+  const supabase = await createClient();
+  await syncRecurring(); // create any due recurring entries before reading
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("base_currency")
-    .eq("id", user.id)
-    .single();
+  const [{ data: profile }, { rates, isStale }, { data: rawAccounts }, { data: balances }, { data: transactions }, { data: budgets }, today] = await Promise.all([
+    supabase.from("profiles").select("base_currency").eq("id", user.id).single(),
+    getExchangeRates(),
+    supabase.from("accounts").select("*").eq("user_id", user.id),
+    supabase.from("account_balances").select("account_id, balance").eq("user_id", user.id),
+    supabase
+      .from("transactions")
+      .select(`
+        *,
+        category:categories(name, icon),
+        account:accounts!transactions_account_id_fkey(currency)
+      `)
+      .eq("user_id", user.id)
+      .order("txn_date", { ascending: false })
+      .limit(5),
+    supabase.from("budgets").select("*").eq("user_id", user.id),
+    getToday(),
+  ]);
 
   const baseCurrency = profile?.base_currency || "USD";
   const currencySymbol = getCurrencySymbol(baseCurrency);
-  const { rates, isStale } = await getExchangeRates();
 
-  const { data: rawAccounts } = await supabase
-    .from("accounts")
-    .select(`
-      *,
-      outgoing_transactions:transactions!transactions_account_id_fkey(amount, type),
-      incoming_transfers:transactions!transactions_to_account_id_fkey(to_amount, type)
-    `)
-    .eq("user_id", user.id);
-
-  const allAccounts = (rawAccounts || []).map((account: any) => {
-    let balance = 0;
-    if (account.outgoing_transactions) {
-      account.outgoing_transactions.forEach((txn: any) => {
-        if (txn.type === "income") balance += Number(txn.amount);
-        else if (txn.type === "expense") balance -= Number(txn.amount);
-        else if (txn.type === "transfer") balance -= Number(txn.amount);
-      });
-    }
-    if (account.incoming_transfers) {
-      account.incoming_transfers.forEach((txn: any) => {
-        if (txn.type === "transfer" && txn.to_amount) balance += Number(txn.to_amount);
-      });
-    }
-    return { ...account, balance };
-  });
+  const balanceById = new Map((balances || []).map((b) => [b.account_id, Number(b.balance)]));
+  const allAccounts = (rawAccounts || []).map((account) => ({ ...account, balance: balanceById.get(account.id) ?? 0 }));
 
   const activeAccounts = (allAccounts || []).filter(a => !a.archived_at).map(a => ({
     ...a,
@@ -59,20 +51,21 @@ export default async function DashboardPage() {
   }));
   const accounts = [...activeAccounts].sort((a, b) => b.convertedBalance - a.convertedBalance).slice(0, 3);
 
-  const { data: transactions } = await supabase
-    .from("transactions")
-    .select(`
-      *,
-      category:categories(name, icon),
-      account:accounts!transactions_account_id_fkey(currency)
-    `)
-    .eq("user_id", user.id)
-    .order("txn_date", { ascending: false })
-    .limit(5);
-
   const totalBalance = activeAccounts.reduce((sum, acc) => sum + acc.convertedBalance, 0);
 
+  // Remaining per budget in the base currency (limits are stored in each budget's currency)
+  const loadedBudgets = await loadCurrentBudgets(supabase, user.id, budgets || [], baseCurrency, rates, today);
+  const allowance = safeToSpend(
+    loadedBudgets.flatMap(({ budget, period, spent }) =>
+      period
+        ? [{ remaining: convertCurrency(Number(period.effective_limit), budget.currency || baseCurrency, baseCurrency, rates) - spent, periodEnd: period.period_end }]
+        : []
+    ),
+    today
+  );
+
   return (
+    <PageTransition>
     <div className="flex flex-col gap-8 p-6 md:p-10 max-w-5xl mx-auto w-full">
       <StaleRateBanner isStale={isStale} />
       
@@ -82,9 +75,13 @@ export default async function DashboardPage() {
           Total Balance
         </span>
         <h1 className="font-mono text-5xl md:text-7xl font-semibold tracking-tight text-oreo-slate-purple">
-          <AnimatedCounter value={totalBalance} prefix={currencySymbol} />
+          <AnimatedCounter value={totalBalance} prefix={currencySymbol} decimals={currencyDecimals(baseCurrency)} />
         </h1>
       </div>
+
+      {(accounts.length > 0 || (transactions?.length ?? 0) > 0) && (
+        <SafeToSpendCard {...allowance} baseCurrency={baseCurrency} currencySymbol={currencySymbol} />
+      )}
 
       {(!accounts?.length && !transactions?.length) ? (
         <Card
@@ -114,25 +111,24 @@ export default async function DashboardPage() {
           <Card className="border-0 shadow-sm flex flex-col" style={{ boxShadow: "0 4px 24px rgba(86, 86, 118, 0.04)" }}>
             <CardHeader className="pb-4 flex flex-row items-center justify-between">
               <CardTitle className="font-heading text-xl text-oreo-slate-purple">Your Accounts</CardTitle>
-              <Link href="/accounts" className="text-sm font-medium text-oreo-dusty-teal flex items-center hover:underline">
+              <Link href="/accounts" transitionTypes={["nav-forward"]} className="text-sm font-medium text-oreo-dusty-teal flex items-center hover:underline">
                 View All <ArrowRight className="ml-1 h-3 w-3" />
               </Link>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               {accounts?.length ? accounts.map((acc) => {
-                const Icon = acc.icon ? (LucideIcons as any)[acc.icon] : LucideIcons.Wallet;
                 return (
                   <div key={acc.id} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-oreo-lavender/50 text-oreo-slate-purple">
-                        {Icon && <Icon className="h-5 w-5" />}
+                        <DynamicIcon icon={acc.icon} fallback={Wallet} className="h-5 w-5" />
                       </div>
                       <div className="flex flex-col">
                         <span className="font-medium text-sm text-foreground">{acc.name}</span>
                         <span className="text-[10px] text-muted-foreground capitalize">{acc.type.replace("_", " ")}</span>
                       </div>
                     </div>
-                    <span className="font-mono text-sm font-semibold">{acc.currency} {acc.balance.toFixed(2)}</span>
+                    <span className="font-mono text-sm font-semibold">{acc.currency} {formatAmount(acc.balance, acc.currency)}</span>
                   </div>
                 );
               }) : (
@@ -145,7 +141,7 @@ export default async function DashboardPage() {
           <Card className="border-0 shadow-sm flex flex-col" style={{ boxShadow: "0 4px 24px rgba(86, 86, 118, 0.04)" }}>
             <CardHeader className="pb-4 flex flex-row items-center justify-between">
               <CardTitle className="font-heading text-xl text-oreo-slate-purple">Recent Activity</CardTitle>
-              <Link href="/transactions" className="text-sm font-medium text-oreo-dusty-teal flex items-center hover:underline">
+              <Link href="/transactions" transitionTypes={["nav-forward"]} className="text-sm font-medium text-oreo-dusty-teal flex items-center hover:underline">
                 View All <ArrowRight className="ml-1 h-3 w-3" />
               </Link>
             </CardHeader>
@@ -153,16 +149,14 @@ export default async function DashboardPage() {
               {transactions?.length ? transactions.map((txn) => {
                 const isExpense = txn.type === "expense";
                 const isTransfer = txn.type === "transfer";
-                const catIcon = txn.category?.icon || "Tag";
-                const Icon = (LucideIcons as any)[catIcon] || LucideIcons.Tag;
-                const txnCurrency = (txn as any).account?.currency || baseCurrency;
-                const convertedAmount = convertCurrency(Number(txn.amount), txnCurrency, baseCurrency, rates);
+                                const txnCurrency = (txn as any).account?.currency || baseCurrency;
+                const convertedAmount = amountIn(txn, baseCurrency, rates);
                 const prefix = isTransfer ? "" : isExpense ? "-" : "+";
                 return (
                   <div key={txn.id} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                        <Icon className="h-5 w-5" />
+                        <DynamicIcon icon={txn.category?.icon} className="h-5 w-5" />
                       </div>
                       <div className="flex flex-col">
                         <span className="font-medium text-sm text-foreground">{txn.category?.name || "Uncategorized"}</span>
@@ -171,11 +165,11 @@ export default async function DashboardPage() {
                     </div>
                     <div className="flex flex-col items-end">
                       <span className={`font-mono text-sm font-semibold ${isExpense ? "text-oreo-mauve" : isTransfer ? "text-foreground" : "text-oreo-dusty-teal"}`}>
-                        {prefix}{currencySymbol}{convertedAmount.toFixed(2)}
+                        {prefix}{currencySymbol}{formatAmount(convertedAmount, baseCurrency)}
                       </span>
                       {txnCurrency !== baseCurrency && (
                         <span className="text-[10px] text-muted-foreground font-mono">
-                          {prefix}{txnCurrency} {Number(txn.amount).toFixed(2)}
+                          {prefix}{txnCurrency} {formatAmount(Number(txn.amount), txnCurrency)}
                         </span>
                       )}
                     </div>
@@ -189,5 +183,6 @@ export default async function DashboardPage() {
         </div>
       )}
     </div>
+    </PageTransition>
   );
 }

@@ -74,6 +74,8 @@
   /* === Motion tokens === */
   --ease-oreo: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-oreo-in: cubic-bezier(0.5, 0, 0.75, 0);
+  /* UIKit sheet/navigation curve: fast start, long soft settle */
+  --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
   --duration-xs: 120ms;
   --duration-sm: 180ms;
   --duration-md: 260ms;
@@ -162,7 +164,75 @@
   }
   html {
     @apply font-sans;
+    /* iOS: no grey tap flash, no font inflation in landscape */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
   }
+  /* Removes the 300ms double-tap-zoom delay on controls */
+  a, button, input, select, textarea, label, summary, [role="button"], [role="tab"] {
+    touch-action: manipulation;
+  }
+}
+
+/*
+ * Navigation push (see components/layout/page-transition.tsx). Mirrors UINavigationController:
+ * the new page enters from the right edge, the old one parallaxes a third left and dims.
+ */
+::view-transition-old(.nav-forward) {
+  animation: 380ms var(--ease-ios) both ios-push-out;
+}
+::view-transition-new(.nav-forward) {
+  animation: 380ms var(--ease-ios) both ios-push-in;
+}
+::view-transition-old(.nav-back) {
+  animation: 380ms var(--ease-ios) both ios-push-in reverse;
+}
+::view-transition-new(.nav-back) {
+  animation: 380ms var(--ease-ios) both ios-push-out reverse;
+}
+@keyframes ios-push-in {
+  from { translate: 100% 0; }
+}
+@keyframes ios-push-out {
+  to { translate: -30% 0; filter: brightness(0.92); }
+}
+/* Bars stay put while content moves */
+::view-transition-group(nav-bar),
+::view-transition-group(tab-bar) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(nav-bar),
+::view-transition-old(tab-bar) {
+  display: none;
+}
+::view-transition-new(nav-bar),
+::view-transition-new(tab-bar) {
+  animation: none;
+}
+/* Taps during the animation reach the live page */
+::view-transition {
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
+/* Safe areas (notch, home indicator). Needs viewport-fit=cover, set in app/layout.tsx. */
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+/* iOS tab bar: 49pt bar + home indicator */
+@utility pb-tabbar {
+  padding-bottom: calc(49px + env(safe-area-inset-bottom, 0px));
 }
 
 @layer utilities {

@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { updateBudget } from "@/app/actions/budgets";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input, MoneyInput } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
 import { BudgetCardData } from "./BudgetCard";
@@ -74,12 +74,9 @@ export function EditBudgetDialog({
           {/* Limit Amount */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="limit_amount">Limit ({currencySymbol})</Label>
-            <Input
+            <MoneyInput
               id="limit_amount"
               name="limit_amount"
-              type="number"
-              step="0.01"
-              min="0.01"
               defaultValue={budget.limit_amount}
               required
             />
@@ -93,7 +90,7 @@ export function EditBudgetDialog({
               name="period_type"
               value={periodType}
               onChange={(e) => setPeriodType(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="flex h-10 pointer-coarse:h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base pointer-fine:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               required
             >
               <option value="daily">Daily</option>

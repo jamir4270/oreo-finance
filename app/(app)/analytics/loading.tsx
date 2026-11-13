@@ -1,8 +1,10 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageTransition } from "@/components/layout/page-transition";
 
 export default function AnalyticsLoading() {
   return (
-    <div className="flex flex-1 flex-col p-4 md:p-8 lg:p-10 max-w-5xl mx-auto w-full">
+    <PageTransition>
+    <div className="flex flex-1 flex-col p-4 md:p-8 lg:p-10 max-w-5xl mx-auto w-full" aria-busy="true" aria-label="Loading">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border/60 pb-8">
         <div className="flex flex-col gap-2 min-w-0">
           <Skeleton className="h-10 w-48" />
@@ -29,5 +31,6 @@ export default function AnalyticsLoading() {
         </div>
       </div>
     </div>
+    </PageTransition>
   );
 }

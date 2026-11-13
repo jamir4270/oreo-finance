@@ -3,7 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { getExchangeRates } from "@/lib/exchange-rates";
-import { convertCurrency } from "@/lib/currency";
+import { tryConvertCurrency, roundToCurrency, baseSnapshot } from "@/lib/currency";
+import { FREQUENCIES, occurrenceAfter, type Frequency } from "@/lib/recurrence";
 
 export type TransactionActionState = {
   error?: string;
@@ -11,55 +12,54 @@ export type TransactionActionState = {
   warning?: string;
 } | null;
 
-export async function createTransaction(
-  _prevState: TransactionActionState,
-  formData: FormData
-): Promise<TransactionActionState> {
-  const supabase = await createClient();
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
+const rateUnavailable = (from: string, to: string) =>
+  `We couldn't get a ${from} → ${to} exchange rate right now, so this wasn't saved. Try again shortly, or enter the amount in the account's currency.`;
+
+/** Validates the form and converts amounts into the accounts' currencies. Shared by create and update. */
+async function parseTransactionForm(supabase: SupabaseServerClient, formData: FormData) {
   const type = formData.get("type") as string;
-  const inputAmountStr = formData.get("input_amount") as string;
+  const inputAmountStr = ((formData.get("input_amount") as string) || "").trim();
   const inputCurrency = formData.get("input_currency") as string;
   const account_id = formData.get("account_id") as string;
   const category_id = formData.get("category_id") as string;
   const txn_date = formData.get("txn_date") as string;
   const note = formData.get("note") as string;
-
   const to_account_id = formData.get("to_account_id") as string | null;
 
   if (!type || !inputAmountStr || !account_id || !category_id || !txn_date) {
-    return { error: "Please fill in all required fields." };
+    return { error: "Please fill in all required fields." } as const;
   }
 
   if (type === "transfer" && !to_account_id) {
-    return { error: "Destination account is required for transfers." };
+    return { error: "Destination account is required for transfers." } as const;
   }
 
   if (type === "transfer" && account_id === to_account_id) {
-    return { error: "Source and destination accounts must be different." };
+    return { error: "Source and destination accounts must be different." } as const;
   }
 
-  const inputAmount = parseFloat(inputAmountStr);
+  // Plain decimals only: parseFloat alone would accept "1e3" or "12abc".
+  const inputAmount = /^(\d+\.?\d*|\.\d+)$/.test(inputAmountStr) ? Number(inputAmountStr) : NaN;
   if (isNaN(inputAmount) || inputAmount <= 0) {
-    return { error: "Amount must be greater than zero." };
+    return { error: "Amount must be greater than zero." } as const;
   }
 
-  const { data: userData, error: userError } = await supabase.auth.getUser();
-  if (userError || !userData.user) {
-    return { error: "You must be logged in to log a transaction." };
-  }
-
-  // Fetch account currencies
-  const { data: accountsData } = await supabase
-    .from("accounts")
-    .select("id, currency")
-    .in("id", to_account_id ? [account_id, to_account_id] : [account_id]);
+  // Fetch account currencies and the user's base currency (for the base_amount snapshot)
+  const [{ data: accountsData }, { data: profile }] = await Promise.all([
+    supabase
+      .from("accounts")
+      .select("id, currency")
+      .in("id", to_account_id ? [account_id, to_account_id] : [account_id]),
+    supabase.from("profiles").select("base_currency").single(),
+  ]);
 
   const sourceAccount = accountsData?.find((a) => a.id === account_id);
   const destAccount = accountsData?.find((a) => a.id === to_account_id);
 
   if (!sourceAccount) {
-    return { error: "Could not fetch source account details." };
+    return { error: "Could not fetch source account details." } as const;
   }
 
   let amount = inputAmount;
@@ -68,9 +68,17 @@ export async function createTransaction(
 
   if (inputCurrency && inputCurrency !== sourceAccount.currency) {
     const { rates } = await getExchangeRates();
-    amount = convertCurrency(inputAmount, inputCurrency, sourceAccount.currency, rates);
+    const converted = tryConvertCurrency(inputAmount, inputCurrency, sourceAccount.currency, rates);
+    if (converted === null) {
+      return { error: rateUnavailable(inputCurrency, sourceAccount.currency) } as const;
+    }
+    amount = converted;
     original_amount = inputAmount;
     original_currency = inputCurrency;
+  }
+  amount = roundToCurrency(amount, sourceAccount.currency);
+  if (amount <= 0) {
+    return { error: "Amount is too small for this account's currency." } as const;
   }
 
   // Handle cross-currency transfers
@@ -79,12 +87,16 @@ export async function createTransaction(
 
   if (type === "transfer" && to_account_id) {
     if (!destAccount) {
-      return { error: "Could not fetch destination account details for transfer." };
+      return { error: "Could not fetch destination account details for transfer." } as const;
     }
 
     if (sourceAccount.currency !== destAccount.currency) {
       const { rates } = await getExchangeRates();
-      to_amount = convertCurrency(amount, sourceAccount.currency, destAccount.currency, rates);
+      const converted = tryConvertCurrency(amount, sourceAccount.currency, destAccount.currency, rates);
+      if (converted === null) {
+        return { error: rateUnavailable(sourceAccount.currency, destAccount.currency) } as const;
+      }
+      to_amount = roundToCurrency(converted, destAccount.currency);
       exchange_rate = rates[destAccount.currency] / rates[sourceAccount.currency];
     } else {
       to_amount = amount;
@@ -92,29 +104,30 @@ export async function createTransaction(
     }
   }
 
-  const now = new Date().toISOString();
+  // Freeze the base-currency value at today's rate so history doesn't drift. If the rate
+  // is unavailable, leave it null: reads fall back to live conversion.
+  const baseCurrency: string | null = profile?.base_currency ?? null;
+  const snapshotRates = !baseCurrency || sourceAccount.currency === baseCurrency ? {} : (await getExchangeRates()).rates;
 
-  const { error } = await supabase.from("transactions").insert({
-    user_id: userData.user.id,
-    type,
-    amount,
-    to_account_id: type === "transfer" ? to_account_id : null,
-    to_amount,
-    exchange_rate,
-    original_amount,
-    original_currency,
-    account_id,
-    category_id,
-    txn_date,
-    note: note || null,
-    client_created_at: now,
-    synced_at: now,
-  });
+  return {
+    fields: {
+      type,
+      amount,
+      ...baseSnapshot(amount, sourceAccount.currency, baseCurrency, snapshotRates),
+      to_account_id: type === "transfer" ? to_account_id : null,
+      to_amount,
+      exchange_rate,
+      original_amount,
+      original_currency,
+      account_id,
+      category_id,
+      txn_date,
+      note: note || null,
+    },
+  } as const;
+}
 
-  if (error) {
-    return { error: error.message };
-  }
-
+function revalidateTransactionPaths(type: string) {
   revalidatePath("/transactions");
   revalidatePath("/accounts");
   revalidatePath("/dashboard");
@@ -122,49 +135,77 @@ export async function createTransaction(
     revalidatePath("/analytics");
     revalidatePath("/budgets");
   }
+}
+
+export async function createTransaction(
+  _prevState: TransactionActionState,
+  formData: FormData
+): Promise<TransactionActionState> {
+  const supabase = await createClient();
+
+  const parsed = await parseTransactionForm(supabase, formData);
+  if ("error" in parsed) return { error: parsed.error };
+  const { fields } = parsed;
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) {
+    return { error: "You must be logged in to log a transaction." };
+  }
+
+  const now = new Date().toISOString();
+
+  // Repeat (expenses and income only): create the rule first so this entry is its first
+  // occurrence; later ones are created by lib/recurring.ts when the user opens the app.
+  const repeat = formData.get("repeat") as string | null;
+  let recurring_id: string | null = null;
+  if (repeat && repeat !== "never") {
+    if (!FREQUENCIES.includes(repeat as Frequency) || fields.type === "transfer") {
+      return { error: "Transfers can't repeat yet. Choose Never." };
+    }
+    const { data: rule, error: ruleError } = await supabase
+      .from("recurring_transactions")
+      .insert({
+        user_id: userData.user.id,
+        type: fields.type,
+        account_id: fields.account_id,
+        category_id: fields.category_id,
+        amount: fields.amount,
+        note: fields.note,
+        frequency: repeat,
+        start_date: fields.txn_date,
+        next_date: occurrenceAfter(fields.txn_date, repeat as Frequency, fields.txn_date),
+      })
+      .select("id")
+      .single();
+    if (ruleError || !rule) return { error: ruleError?.message ?? "Couldn't set up the repeat." };
+    recurring_id = rule.id;
+  }
+
+  const { error } = await supabase.from("transactions").insert({
+    user_id: userData.user.id,
+    ...fields,
+    recurring_id,
+    client_created_at: now,
+    synced_at: now,
+  });
+
+  if (error) {
+    // Don't leave a rule behind for a transaction that was never saved.
+    if (recurring_id) await supabase.from("recurring_transactions").delete().eq("id", recurring_id);
+    return { error: error.message };
+  }
+
+  revalidateTransactionPaths(fields.type);
 
   // Non-blocking overdraft warning for expenses
   let warning: string | undefined;
-  if (type === "expense") {
+  if (fields.type === "expense") {
     try {
-      // Compute the account balance after this transaction
-      const { data: account } = await supabase
-        .from("accounts")
-        .select("name")
-        .eq("id", account_id)
-        .single();
-
-      // Sum all transactions for this account to get current balance
-      const { data: incomeTxns } = await supabase
-        .from("transactions")
-        .select("amount")
-        .eq("account_id", account_id)
-        .eq("type", "income");
-
-      const { data: expenseTxns } = await supabase
-        .from("transactions")
-        .select("amount")
-        .eq("account_id", account_id)
-        .eq("type", "expense");
-
-      const { data: transfersOut } = await supabase
-        .from("transactions")
-        .select("amount")
-        .eq("account_id", account_id)
-        .eq("type", "transfer");
-
-      const { data: transfersIn } = await supabase
-        .from("transactions")
-        .select("to_amount")
-        .eq("to_account_id", account_id)
-        .eq("type", "transfer");
-
-      const totalIncome = (incomeTxns || []).reduce((s, t) => s + Number(t.amount), 0);
-      const totalExpense = (expenseTxns || []).reduce((s, t) => s + Number(t.amount), 0);
-      const totalTransferOut = (transfersOut || []).reduce((s, t) => s + Number(t.amount), 0);
-      const totalTransferIn = (transfersIn || []).reduce((s, t) => s + Number(t.to_amount || 0), 0);
-
-      const balance = totalIncome - totalExpense - totalTransferOut + totalTransferIn;
+      const [{ data: account }, { data: row }] = await Promise.all([
+        supabase.from("accounts").select("name").eq("id", fields.account_id).single(),
+        supabase.from("account_balances").select("balance").eq("account_id", fields.account_id).single(),
+      ]);
+      const balance = Number(row?.balance ?? 0);
 
       if (balance < 0) {
         const accountName = account?.name || "account";
@@ -185,107 +226,20 @@ export async function updateTransaction(
 ): Promise<TransactionActionState> {
   const supabase = await createClient();
 
-  const type = formData.get("type") as string;
-  const inputAmountStr = formData.get("input_amount") as string;
-  const inputCurrency = formData.get("input_currency") as string;
-  const account_id = formData.get("account_id") as string;
-  const category_id = formData.get("category_id") as string;
-  const txn_date = formData.get("txn_date") as string;
-  const note = formData.get("note") as string;
-
-  const to_account_id = formData.get("to_account_id") as string | null;
-
-  if (!type || !inputAmountStr || !account_id || !category_id || !txn_date) {
-    return { error: "Please fill in all required fields." };
-  }
-
-  if (type === "transfer" && !to_account_id) {
-    return { error: "Destination account is required for transfers." };
-  }
-
-  if (type === "transfer" && account_id === to_account_id) {
-    return { error: "Source and destination accounts must be different." };
-  }
-
-  const inputAmount = parseFloat(inputAmountStr);
-  if (isNaN(inputAmount) || inputAmount <= 0) {
-    return { error: "Amount must be greater than zero." };
-  }
-
-  // Fetch account currencies
-  const { data: accountsData } = await supabase
-    .from("accounts")
-    .select("id, currency")
-    .in("id", to_account_id ? [account_id, to_account_id] : [account_id]);
-
-  const sourceAccount = accountsData?.find((a) => a.id === account_id);
-  const destAccount = accountsData?.find((a) => a.id === to_account_id);
-
-  if (!sourceAccount) {
-    return { error: "Could not fetch source account details." };
-  }
-
-  let amount = inputAmount;
-  let original_amount: number | null = null;
-  let original_currency: string | null = null;
-
-  if (inputCurrency && inputCurrency !== sourceAccount.currency) {
-    const { rates } = await getExchangeRates();
-    amount = convertCurrency(inputAmount, inputCurrency, sourceAccount.currency, rates);
-    original_amount = inputAmount;
-    original_currency = inputCurrency;
-  }
-
-  // Handle cross-currency transfers
-  let to_amount: number | null = null;
-  let exchange_rate: number | null = null;
-
-  if (type === "transfer" && to_account_id) {
-    if (!destAccount) {
-      return { error: "Could not fetch destination account details for transfer." };
-    }
-
-    if (sourceAccount.currency !== destAccount.currency) {
-      const { rates } = await getExchangeRates();
-      to_amount = convertCurrency(amount, sourceAccount.currency, destAccount.currency, rates);
-      exchange_rate = rates[destAccount.currency] / rates[sourceAccount.currency];
-    } else {
-      to_amount = amount;
-      exchange_rate = 1.0;
-    }
-  }
-
-  const now = new Date().toISOString();
+  const parsed = await parseTransactionForm(supabase, formData);
+  if ("error" in parsed) return { error: parsed.error };
+  const { fields } = parsed;
 
   const { error } = await supabase
     .from("transactions")
-    .update({
-      type,
-      amount,
-      to_account_id: type === "transfer" ? to_account_id : null,
-      to_amount: type === "transfer" ? to_amount : null,
-      exchange_rate: type === "transfer" ? exchange_rate : null,
-      original_amount,
-      original_currency,
-      account_id,
-      category_id,
-      txn_date,
-      note: note || null,
-      updated_at: now,
-    })
+    .update({ ...fields, updated_at: new Date().toISOString() })
     .eq("id", id);
 
   if (error) {
     return { error: error.message };
   }
 
-  revalidatePath("/transactions");
-  revalidatePath("/accounts");
-  revalidatePath("/dashboard");
-  if (type === "expense") {
-    revalidatePath("/analytics");
-    revalidatePath("/budgets");
-  }
+  revalidateTransactionPaths(fields.type);
   return { success: "Transaction updated successfully." };
 }
 

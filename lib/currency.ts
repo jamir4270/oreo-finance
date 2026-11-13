@@ -1,6 +1,25 @@
 /**
- * Converts an amount from one currency to another using the provided exchange rates.
- * Exchange rates must be relative to the same base currency (typically USD).
+ * Converts between currencies using rates relative to one base (USD from Open Exchange Rates).
+ * Returns null when either rate is missing. Use this wherever the result is stored, so a
+ * missing rate can never write an unconverted amount (e.g. KRW 10,000 saved as PHP 10,000).
+ */
+export function tryConvertCurrency(
+  amount: number,
+  fromCurrency: string,
+  toCurrency: string,
+  rates: Record<string, number>
+): number | null {
+  if (fromCurrency === toCurrency) return amount;
+  const fromRate = rates[fromCurrency];
+  const toRate = rates[toCurrency];
+  if (!fromRate || !toRate) return null;
+  return (amount / fromRate) * toRate;
+}
+
+/**
+ * Display-only conversion: falls back to the unconverted amount when a rate is missing, so
+ * a page still renders. That only happens when rates are unavailable, and the stale-rate
+ * banner is shown then. Never store the result; use tryConvertCurrency.
  */
 export function convertCurrency(
   amount: number,
@@ -8,22 +27,77 @@ export function convertCurrency(
   toCurrency: string,
   rates: Record<string, number>
 ): number {
-  if (fromCurrency === toCurrency) {
-    return amount;
-  }
-
-  const fromRate = rates[fromCurrency];
-  const toRate = rates[toCurrency];
-
-  if (!fromRate || !toRate) {
-    // If we don't have the rate for either currency, we can't reliably convert.
-    // In a real app we might throw, but returning the original amount is safer to prevent crashes.
+  const converted = tryConvertCurrency(amount, fromCurrency, toCurrency, rates);
+  if (converted === null) {
     console.error(`Missing exchange rate for ${fromCurrency} or ${toCurrency}`);
     return amount;
   }
+  return converted;
+}
 
-  // Convert to base currency (USD), then to target currency
-  return (amount / fromRate) * toRate;
+/** Minor-unit digits for a currency: 2 for PHP/USD, 0 for JPY/KRW/VND. Unknown codes get 2. */
+export function currencyDecimals(currency: string): number {
+  try {
+    return new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions().maximumFractionDigits ?? 2;
+  } catch {
+    return 2;
+  }
+}
+
+/**
+ * Formats an amount for display: thousands separators and the currency's own decimals
+ * (1,234.50 PHP, 1,235 JPY). No symbol, so callers keep their symbol/code layout.
+ * Pass maximumFractionDigits: 0 for summary figures.
+ * shortcut: fixed "en" grouping so server and client render identically (no hydration
+ * mismatch); switch to the user's locale once it's stored on the profile.
+ */
+export function formatAmount(
+  amount: number,
+  currency: string,
+  { maximumFractionDigits }: { maximumFractionDigits?: number } = {}
+): string {
+  const digits = Math.min(currencyDecimals(currency), maximumFractionDigits ?? Infinity);
+  return new Intl.NumberFormat("en", { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(amount);
+}
+
+/**
+ * Rounds to the currency's minor unit (2 decimals for PHP/USD, 0 for JPY/KRW/VND),
+ * so converted amounts aren't stored as 12.3456789.
+ */
+export function roundToCurrency(amount: number, currency: string): number {
+  const factor = 10 ** currencyDecimals(currency);
+  return Math.round((amount + Number.EPSILON) * factor) / factor;
+}
+
+/**
+ * The base-currency value to freeze on a transaction at save time (see amountIn).
+ * Both null when there's no base currency or the rate is unavailable.
+ */
+export function baseSnapshot(
+  amount: number,
+  accountCurrency: string,
+  baseCurrency: string | null,
+  rates: Record<string, number>
+): { base_amount: number | null; base_currency: string | null } {
+  if (!baseCurrency) return { base_amount: null, base_currency: null };
+  const converted = tryConvertCurrency(amount, accountCurrency, baseCurrency, rates);
+  return converted === null
+    ? { base_amount: null, base_currency: null }
+    : { base_amount: roundToCurrency(converted, baseCurrency), base_currency: baseCurrency };
+}
+
+/**
+ * A transaction's amount in `currency`, preferring the value stored when it was saved
+ * (base_amount, at that day's rate) so history doesn't drift with exchange rates. Falls
+ * back to live conversion for older rows or when `currency` differs from what was stored.
+ */
+export function amountIn(
+  txn: { amount: number | string; base_amount?: number | string | null; base_currency?: string | null; account?: { currency?: string } | null },
+  currency: string,
+  rates: Record<string, number>
+): number {
+  if (txn.base_amount != null && txn.base_currency === currency) return Number(txn.base_amount);
+  return convertCurrency(Number(txn.amount), txn.account?.currency || currency, currency, rates);
 }
 
 export const CURRENCIES = [

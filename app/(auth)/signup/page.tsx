@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { signup, type AuthState } from "@/app/actions/auth";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2, UserPlus, MailCheck } from "lucide-react";
-import { Turnstile } from "@marsidev/react-turnstile";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { TermsDialog } from "@/components/auth/TermsDialog";
 
 export default function SignupPage() {
@@ -16,6 +16,13 @@ export default function SignupPage() {
     signup,
     null
   );
+
+  // Turnstile tokens are single-use: get a fresh one after every submit, or a retry
+  // (e.g. after a wrong password) resends a spent token and fails verification.
+  const turnstileRef = useRef<TurnstileInstance>(undefined);
+  useEffect(() => {
+    if (state) turnstileRef.current?.reset();
+  }, [state]);
 
   // Show success state after sign-up (email confirmation sent)
   if (state?.success) {
@@ -140,7 +147,7 @@ export default function SignupPage() {
               </div>
 
               <div className="flex justify-center min-h-[65px] bg-background/50 rounded-lg p-2">
-                <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""} />
+                <Turnstile ref={turnstileRef} siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""} />
               </div>
             </div>
 

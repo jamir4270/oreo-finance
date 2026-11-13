@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { PageTitle } from "@/components/layout/nav-title";
 import { AccountCard } from "./AccountCard";
 import { AccountData, EditAccountDialog } from "./EditAccountDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,7 +9,7 @@ import { CreateAccountDialog } from "./CreateAccountDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowDownRight, ArrowUpRight, Wallet } from "lucide-react";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
-import { convertCurrency, getCurrencySymbol } from "@/lib/currency";
+import { convertCurrency, getCurrencySymbol, currencyDecimals } from "@/lib/currency";
 
 interface AccountsPageClientProps {
   accounts: (AccountData & { archived_at: string | null; income?: number; expense?: number })[];
@@ -32,9 +33,7 @@ export function AccountsPageClient({ accounts, baseCurrency, rates }: AccountsPa
     <>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div className="flex flex-col gap-1">
-          <h1 className="font-heading text-3xl font-semibold tracking-tight text-oreo-slate-purple">
-            Accounts
-          </h1>
+          <PageTitle>Accounts</PageTitle>
           <p className="text-sm text-muted-foreground">
             Manage your financial accounts and balances.
           </p>
@@ -48,7 +47,7 @@ export function AccountsPageClient({ accounts, baseCurrency, rates }: AccountsPa
             Total Balance
           </span>
           <span className="font-mono text-base sm:text-3xl font-semibold tracking-tight text-foreground truncate">
-            <AnimatedCounter value={totalBalance} prefix={currencySymbol} />
+            <AnimatedCounter value={totalBalance} prefix={currencySymbol} decimals={currencyDecimals(baseCurrency)} />
           </span>
         </div>
         
@@ -57,7 +56,7 @@ export function AccountsPageClient({ accounts, baseCurrency, rates }: AccountsPa
             Income
           </span>
           <span className="font-mono text-sm sm:text-3xl font-semibold tracking-tight text-foreground truncate">
-            <AnimatedCounter value={totalIncome} prefix={currencySymbol} />
+            <AnimatedCounter value={totalIncome} prefix={currencySymbol} decimals={currencyDecimals(baseCurrency)} />
           </span>
         </div>
         
@@ -66,7 +65,7 @@ export function AccountsPageClient({ accounts, baseCurrency, rates }: AccountsPa
             Expenses
           </span>
           <span className="font-mono text-sm sm:text-3xl font-semibold tracking-tight text-foreground truncate">
-            <AnimatedCounter value={totalExpense} prefix={currencySymbol} />
+            <AnimatedCounter value={totalExpense} prefix={currencySymbol} decimals={currencyDecimals(baseCurrency)} />
           </span>
         </div>
       </div>

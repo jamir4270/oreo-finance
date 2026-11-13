@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { syncRecurring } from "@/lib/recurring";
+import { createClient, getAuthUser } from "@/lib/supabase/server";
 import { AppShell } from "@/components/layout/AppShell";
+import { getToday } from "@/lib/today";
 
 /**
  * Protected route group layout.
@@ -16,34 +18,24 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getAuthUser();
   if (!user) {
     redirect("/login");
   }
+  const supabase = await createClient();
+  await syncRecurring(); // create any due recurring entries before reading
 
-  // Fetch accounts and categories for the global Add Transaction modal
-  const { data: accounts } = await supabase
-    .from("accounts")
-    .select("id, name, currency")
-    .eq("user_id", user.id)
-    .order("name");
-
-  const { data: categories } = await supabase
-    .from("categories")
-    .select("id, name, icon, txn_type")
-    .eq("user_id", user.id)
-    .order("name");
-
-  const today = new Date().toISOString().split('T')[0];
-  const { count: dailyTxnCount } = await supabase
-    .from("transactions")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .eq("txn_date", today);
+  const today = await getToday();
+  // Accounts and categories feed the global Add Transaction modal
+  const [{ data: accounts }, { data: categories }, { count: dailyTxnCount }] = await Promise.all([
+    supabase.from("accounts").select("id, name, currency").eq("user_id", user.id).order("name"),
+    supabase.from("categories").select("id, name, icon, txn_type").eq("user_id", user.id).order("name"),
+    supabase
+      .from("transactions")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("txn_date", today),
+  ]);
 
   return (
     <AppShell accounts={accounts || []} categories={categories || []} dailyTxnCount={dailyTxnCount || 0}>

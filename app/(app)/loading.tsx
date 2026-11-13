@@ -1,19 +1,22 @@
-import { Mascot } from "@/components/ui/mascot";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PageTransition } from "@/components/layout/page-transition";
 
+// Fallback for routes without their own loading.tsx: a generic header + list,
+// so navigation never flashes a full-screen loader.
 export default function AppLoading() {
   return (
-    <div className="flex h-[80vh] w-full flex-col items-center justify-center gap-6">
-      <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-oreo-lavender/40 shadow-oreo-sm">
-        <Mascot pose="idle" className="h-16 w-16" />
+    <PageTransition>
+    <div className="flex flex-1 flex-col p-6 md:p-10 max-w-5xl mx-auto w-full" aria-busy="true" aria-label="Loading">
+      <div className="flex flex-col gap-2 border-b border-border pb-6">
+        <Skeleton className="h-9 w-48" />
+        <Skeleton className="h-4 w-64" />
       </div>
-      <div className="flex flex-col items-center gap-2">
-        <h3 className="font-heading text-lg font-medium text-oreo-slate-purple animate-pulse">
-          Loading...
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Fetching your finances
-        </p>
+      <div className="mt-8 flex flex-col gap-3">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Skeleton key={i} className="h-16 w-full rounded-xl" />
+        ))}
       </div>
     </div>
+    </PageTransition>
   );
 }

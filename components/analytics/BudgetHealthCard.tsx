@@ -11,7 +11,7 @@ import {
 import { AnalyticsBudget } from "./AnalyticsPageClient";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { getCurrencySymbol } from "@/lib/currency";
+import { getCurrencySymbol, formatAmount } from "@/lib/currency";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -62,8 +62,8 @@ export function BudgetHealthCard({ budgets, baseCurrency }: BudgetHealthCardProp
               </span>
               <div className="flex items-baseline justify-between">
                 <span className={cn("text-4xl font-mono font-bold tracking-tight", isOverBudget ? "text-oreo-mauve" : "text-foreground")}>
-                  {currencySymbol}{totalSpent.toFixed(0)}
-                  <span className="text-2xl font-sans font-normal text-muted-foreground"> / {totalBudgeted.toFixed(0)}</span>
+                  {currencySymbol}{formatAmount(totalSpent, baseCurrency, { maximumFractionDigits: 0 })}
+                  <span className="text-2xl font-sans font-normal text-muted-foreground"> / {formatAmount(totalBudgeted, baseCurrency, { maximumFractionDigits: 0 })}</span>
                 </span>
                 <span className={cn("text-sm font-semibold tracking-wide uppercase rounded-full px-2.5 py-1", isOverBudget ? "bg-oreo-mauve/10 text-oreo-mauve" : "bg-oreo-dusty-teal/10 text-oreo-dusty-teal")}>
                   {isOverBudget ? "Over Budget" : "On Track"}
@@ -105,7 +105,7 @@ export function BudgetHealthCard({ budgets, baseCurrency }: BudgetHealthCardProp
                               <div className="flex justify-between items-center text-sm gap-3">
                                 <span className="font-medium truncate flex-1">{b.category?.name}</span>
                                 <span className={cn("font-mono shrink-0", over ? "text-oreo-mauve font-bold" : "text-muted-foreground")}>
-                                  {currencySymbol}{spent.toFixed(0)} <span className="opacity-70">/ {limit.toFixed(0)}</span>
+                                  {currencySymbol}{formatAmount(spent, baseCurrency, { maximumFractionDigits: 0 })} <span className="opacity-70">/ {formatAmount(limit, baseCurrency, { maximumFractionDigits: 0 })}</span>
                                 </span>
                               </div>
                               <div className="h-2 w-full overflow-hidden rounded-full bg-muted/60">
@@ -147,7 +147,7 @@ export function BudgetHealthCard({ budgets, baseCurrency }: BudgetHealthCardProp
                               <div className="flex justify-between items-center text-sm gap-3">
                                 <span className="font-medium truncate flex-1">{b.category?.name}</span>
                                 <span className={cn("font-mono shrink-0", over ? "text-oreo-mauve font-bold" : "text-muted-foreground")}>
-                                  {currencySymbol}{spent.toFixed(0)} <span className="opacity-70">/ {limit.toFixed(0)}</span>
+                                  {currencySymbol}{formatAmount(spent, baseCurrency, { maximumFractionDigits: 0 })} <span className="opacity-70">/ {formatAmount(limit, baseCurrency, { maximumFractionDigits: 0 })}</span>
                                 </span>
                               </div>
                               <div className="h-2 w-full overflow-hidden rounded-full bg-muted/60">

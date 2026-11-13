@@ -1,37 +1,36 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { PageTransition } from "@/components/layout/page-transition";
+import { PageTitle } from "@/components/layout/nav-title";
+import { createClient, getAuthUser } from "@/lib/supabase/server";
 import SettingsClient from "@/components/settings/SettingsClient";
+import type { RecurringRule } from "@/components/settings/RecurringList";
 
 export default async function SettingsPage() {
-  const supabase = await createClient();
-
-  // Get current user
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) {
+  const user = await getAuthUser();
+  if (!user) {
     redirect("/login");
   }
+  const supabase = await createClient();
 
-  // Get user profile for base currency
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("base_currency")
-    .eq("id", user.id)
-    .single();
+  // Profile (base currency) and recurring rules
+  const [{ data: profile, error: profileError }, { data: recurring }] = await Promise.all([
+    supabase.from("profiles").select("base_currency").eq("id", user.id).single(),
+    supabase
+      .from("recurring_transactions")
+      .select("id, type, amount, frequency, next_date, note, account:accounts (name, currency), category:categories (name, icon)")
+      .eq("user_id", user.id)
+      .order("next_date"),
+  ]);
 
   if (profileError) {
     console.error("Error fetching profile:", profileError);
   }
 
   return (
+    <PageTransition>
     <div className="flex flex-1 flex-col p-6 md:p-10 max-w-5xl mx-auto w-full">
       <div className="flex flex-col gap-2 border-b border-border pb-6 mb-8">
-        <h1 className="font-heading text-3xl font-semibold tracking-tight text-oreo-slate-purple">
-          Settings
-        </h1>
+        <PageTitle>Settings</PageTitle>
         <p className="text-sm text-muted-foreground">
           Manage your account, preferences, and base currency.
         </p>
@@ -40,7 +39,9 @@ export default async function SettingsPage() {
       <SettingsClient
         email={user.email ?? "No email found"}
         baseCurrency={profile?.base_currency ?? "USD"}
+        recurring={(recurring || []) as unknown as RecurringRule[]}
       />
     </div>
+    </PageTransition>
   );
 }
