@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { login, type AuthState } from "@/app/actions/auth";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -8,13 +8,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2, LogIn } from "lucide-react";
-import { Turnstile } from "@marsidev/react-turnstile";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState<AuthState, FormData>(
     login,
     null
   );
+
+  // Turnstile tokens are single-use: get a fresh one after every submit, or a retry
+  // (e.g. after a wrong password) resends a spent token and fails verification.
+  const turnstileRef = useRef<TurnstileInstance>(undefined);
+  useEffect(() => {
+    if (state) turnstileRef.current?.reset();
+  }, [state]);
 
   return (
     <div className="flex w-full flex-col gap-4">
@@ -74,7 +81,7 @@ export default function LoginPage() {
 
             {/* Turnstile */}
             <div className="flex justify-center pt-2 min-h-[65px]">
-              <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""} />
+              <Turnstile ref={turnstileRef} siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""} />
             </div>
 
             {/* Submit */}

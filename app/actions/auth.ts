@@ -68,6 +68,7 @@ export async function signup(
       );
       const outcome = await res.json();
       if (!outcome.success) {
+        console.error("Turnstile verification failed:", outcome["error-codes"]);
         return { error: "Security check failed. Please try again." };
       }
     } catch (err) {
@@ -132,6 +133,7 @@ export async function login(
       );
       const outcome = await res.json();
       if (!outcome.success) {
+        console.error("Turnstile verification failed:", outcome["error-codes"]);
         return { error: "Security check failed. Please try again." };
       }
     } catch (err) {
